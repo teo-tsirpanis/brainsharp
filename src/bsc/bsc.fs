@@ -1,24 +1,27 @@
+// Copyright (c) 2016 Theodore Tsirpanis
+// 
+// This software is released under the MIT License.
+// http://opensource.org/licenses/mit-license.php
+
 namespace Brainsharp
 
-open RLE
+open BFParser
+open FParsec
 
 module Bsc = 
     [<EntryPoint>]
     let main argv = 
         printfn "Hello world!!! Let's make some tests... \n"
-        let list = [ 7; 7; 7; 7; 4; 6; 9; 9 ]
         
-        (*let encoded = encode list
-        let decoded = decode encoded*)
         let print s = 
             printfn "%A" s
             s
-        list
-        |> print
-        |> encode
-        |> print
-        |> decode
-        |> print
-        |> ignore
+        
+        let s = "++--<<><<<>>,..,[,.,....]"
+        let p = run BrainfuckParser s
+        match p with
+        |Success (result,_,_) -> printfn "Success %A" result
+        |Failure (msg,_,_) -> printfn "Failure %s" msg
+        
         System.Console.ReadLine() |> ignore
         0 // return an integer exit code
