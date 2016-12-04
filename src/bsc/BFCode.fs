@@ -14,16 +14,15 @@ and BFToken =
     | Loop of BFCodeTree
 
 module BFCode = 
-    open System
     open BFParser
+    open System
     
     let rec makeCodeTree s = 
-        s
-        |> List.map (function
-               |Plus -> MemoryControl 1uy
-               |Minus -> MemoryControl 255uy
-               |Left -> PointerControl Int32.MaxValue
-               |Right -> PointerControl 1
-               |Dot -> IOWrite
-               |Comma -> IORead
-               |BracketLoop body -> Loop (makeCodeTree body))
+        s |> List.map (function 
+                 | Plus -> MemoryControl 1uy
+                 | Minus -> MemoryControl 255uy
+                 | Left -> PointerControl Int32.MaxValue
+                 | Right -> PointerControl 1
+                 | Dot -> IOWrite
+                 | Comma -> IORead
+                 | BracketLoop body -> Loop(makeCodeTree body))

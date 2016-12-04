@@ -2,7 +2,6 @@
 // 
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
-
 namespace Brainsharp
 
 /// <summary>Run-length Encoding functions.<summary/>
@@ -17,9 +16,8 @@ module RLE =
     /// <returns/>
     let encode l = 
         let rec pack l b = 
-            if Seq.isEmpty l then
-                b
-            else  
+            if Seq.isEmpty l then b
+            else 
                 let head = Seq.head l
                 
                 let count = 
@@ -27,11 +25,15 @@ module RLE =
                     |> Seq.takeWhile (fun t -> t = head)
                     |> Seq.length
                 
-                let newb = Seq.append b [(count,head)]
+                let newb = Seq.append b [ (count, head) ]
                 pack (Seq.skip count l) newb
         pack l [] |> Array.ofSeq
     
     /// <summary>
     /// Decodes a pair of integers and objects returned by <c>encode<c/>.
     /// </summary>
-    let decode l = l |> Seq.filter (fun i -> fst i > 0) |> Seq.collect (fun (count, item) -> Seq.replicate count item) |> Array.ofSeq
+    let decode l = 
+        l
+        |> Seq.filter (fun i -> fst i > 0)
+        |> Seq.collect (fun (count, item) -> Seq.replicate count item)
+        |> Array.ofSeq

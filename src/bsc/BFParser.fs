@@ -19,7 +19,6 @@ module BFParser =
     let private whiteSpace = optional (noneOf "+-<>[],.")
     let private strr v c = whiteSpace >>. stringReturn v c
     let private str v = whiteSpace >>. pstring v
-    
     let private p, pref = createParserForwardedToRef<BFSyntax list, unit>()
     
     pref := choice [ strr "+" Plus
