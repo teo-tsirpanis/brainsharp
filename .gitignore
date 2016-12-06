@@ -248,6 +248,7 @@ paket-files/
 .fake/
 build/
 deploy/
+**/AssemblyInfo.fs
 
 # JetBrains Rider
 .idea/
