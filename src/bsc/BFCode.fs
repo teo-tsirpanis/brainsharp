@@ -8,7 +8,7 @@ type BFCodeTree = BFToken list
 
 and BFToken = 
     | MemoryControl of byte
-    | PointerControl of int
+    | PointerControl of uint16
     | IOWrite
     | IORead
     | Loop of BFCodeTree
@@ -21,8 +21,8 @@ module BFCode =
         s |> List.map (function 
                  | Plus -> MemoryControl 1uy
                  | Minus -> MemoryControl 255uy
-                 | Left -> PointerControl Int32.MaxValue
-                 | Right -> PointerControl 1
+                 | Left -> PointerControl UInt16.MaxValue
+                 | Right -> PointerControl 1us
                  | Dot -> IOWrite
                  | Comma -> IORead
                  | BracketLoop body -> Loop(makeCodeTree body))
