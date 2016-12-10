@@ -1,3 +1,7 @@
+// Copyright (c) 2016 Theodore Tsirpanis
+// 
+// This software is released under the MIT License.
+// http://opensource.org/licenses/mit-license.php
 // include Fake libs
 #r "./packages/FAKE/tools/FakeLib.dll"
 #r "./packages/Fantomas/lib/FantomasLib.dll"

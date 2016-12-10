@@ -4,6 +4,7 @@
 // http://opensource.org/licenses/mit-license.php
 namespace Brainsharp
 
+open BFCode
 open BFParser
 open FParsec
 
@@ -18,7 +19,7 @@ module Bsc =
         let s = "++--<<><<<>>,..,[,.,....]"
         let p = run BrainfuckParser s
         match p with
-        | Success(result, _, _) -> printfn "Success %A" result
+        | Success(result, _, _) -> printfn "Success %A" (result |> makeCodeTree)
         | Failure(msg, _, _) -> printfn "Failure %s" msg
         System.Console.ReadLine() |> ignore
         0 // return an integer exit code
