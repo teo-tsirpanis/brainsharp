@@ -5,6 +5,7 @@
 namespace Brainsharp
 
 module BFParser = 
+    open Chessie.ErrorHandling
     open FParsec
     
     type BFSyntax = 
@@ -30,4 +31,18 @@ module BFParser =
                      between (str "[") (str "]") p |>> BracketLoop ]
             |> many
     
-    let BrainfuckParser = whiteSpace >>. p .>> whiteSpace .>> eof
+    let brainfuckParser = whiteSpace >>. p .>> whiteSpace .>> eof
+    
+    let private makeParseResult x = 
+        match x with
+        | Success(x, _, _) -> ok x
+        | Failure(x, y, _) -> Trial.fail (ParseError(x, y))
+    
+    let parseFile path = 
+        runParserOnFile brainfuckParser () path System.Text.Encoding.ASCII 
+        |> makeParseResult
+    
+    let parseString s streamName = 
+        runParserOnString brainfuckParser () (match streamName with
+                                              | Some s -> s
+                                              | None -> "") s
