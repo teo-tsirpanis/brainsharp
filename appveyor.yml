@@ -1,0 +1,8 @@
+os: Visual Studio 2015
+
+build_script:
+  - cmd: build.cmd Deploy
+
+version: '0.1.{build}'
+artifacts:
+  - path: deploy/BrainSharp/{version}.zip

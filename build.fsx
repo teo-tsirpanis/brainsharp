@@ -8,14 +8,19 @@
 #r "./packages/FSharp.Compiler.Service/lib/net45/FSharp.Compiler.Service.dll"
 
 open Fake
+open Fake.AppVeyor
 open Fake.AssemblyInfoFile
 open Fake.Git
 open Fantomas.FakeHelpers
 open Fantomas.FormatConfig
 
 // Directories
+let appName = "BrainSharp"
+// version info
+let version = "0.1" // or retrieve from CI server
 let buildDir = "./build/"
 let deployDir = "./deploy/"
+let deployItem = deployDir + appName + version + ".zip"
 
 let fantomasConfig = 
     { FormatConfig.Default with PageWidth = 80
@@ -24,9 +29,6 @@ let fantomasConfig =
 // Filesets
 let appReferences = !!"/**/*.csproj" ++ "/**/*.fsproj"
 let sourceFiles = !!"src/**/*.fs" ++ "src/**/*.fsx" ++ "build.fsx"
-let appName = "BrainSharp"
-// version info
-let version = "0.1" // or retrieve from CI server
 
 // Targets
 Target "Clean" (fun _ -> CleanDirs [ buildDir; deployDir ])
@@ -54,8 +56,9 @@ Target "FormatCode" (fun _ ->
     sourceFiles
     |> formatCode fantomasConfig
     |> Log "Formatted Files: ")
+Target "AppVeyor" (fun _ -> PushArtifact (fun p -> {p with Path = deployItem }))
 // Build order
 "Clean" ?=> "Debug"
-"Clean" ?=> "Release" ==> "Deploy"
+"Clean" ?=> "Release" ==> "Deploy" ==> "AppVeyor"
 // start build
 RunTargetOrDefault "Debug"
