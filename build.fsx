@@ -20,7 +20,7 @@ let appName = "BrainSharp"
 let version = "0.1" // or retrieve from CI server
 let buildDir = "./build/"
 let deployDir = "./deploy/"
-let deployItem = deployDir + appName + version + ".zip"
+let deployItem version = deployDir + appName + version + ".zip"
 
 let fantomasConfig = 
     { FormatConfig.Default with PageWidth = 80
@@ -50,13 +50,15 @@ Target "Debug" (fun _ -> DoBuild MSBuildDebug)
 Target "Release" (fun _ -> DoBuild MSBuildRelease)
 Target "Deploy" 
     (fun _ -> 
-    !!(buildDir + "/**/*.*") -- "*.zip" 
-    |> Zip buildDir (deployDir + appName + version + ".zip"))
+    !!(buildDir + "/**/*.*") -- "*.zip" |> Zip buildDir (deployItem version))
 Target "FormatCode" (fun _ -> 
     sourceFiles
     |> formatCode fantomasConfig
     |> Log "Formatted Files: ")
-Target "AppVeyor" (fun _ -> PushArtifact (fun p -> {p with Path = deployItem }))
+Target "AppVeyor" 
+    (fun _ -> 
+    PushArtifact
+        (fun p -> { p with Path = deployItem AppVeyorEnvironment.BuildVersion }))
 // Build order
 "Clean" ?=> "Debug"
 "Clean" ?=> "Release" ==> "Deploy" ==> "AppVeyor"
