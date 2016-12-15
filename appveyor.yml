@@ -1,8 +1,8 @@
-os: Visual Studio 2015
-
-build_script:
-  - cmd: build.cmd AppVeyor
-cache:
-  - packages -> paket.lock
-
-version: '0.1.{build}'
+--- 
+artifacts: 
+  - 
+    path: ./build/
+build_script: 
+  - 
+    cmd: "build.cmd Release"
+version: "0.1.{build}"

@@ -25,8 +25,6 @@ let version =
     | _ -> "0.1" // or retrieve from CI server
 
 let buildDir = "./build/"
-let deployDir = "./deploy/"
-let deployItem = deployDir + appName + "_" + version + ".zip"
 
 let fantomasConfig = 
     { FormatConfig.Default with PageWidth = 80
@@ -35,10 +33,9 @@ let fantomasConfig =
 // Filesets
 let appReferences = !!"/**/*.csproj" ++ "/**/*.fsproj"
 let sourceFiles = !!"src/**/*.fs" ++ "src/**/*.fsx" ++ "build.fsx"
-let binaryFiles = !!(buildDir + "**/*.*") -- "build/**/*.pdb" -- "build/**/*.xml" -- "build/**/*.zip"
 
 // Targets
-Target "Clean" (fun _ -> CleanDirs [ buildDir; deployDir ])
+Target "Clean" (fun _ -> CleanDir buildDir)
 
 let DoBuild f = 
     CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" 
@@ -55,17 +52,12 @@ let DoBuild f =
 
 Target "Debug" (fun _ -> DoBuild MSBuildDebug)
 Target "Release" (fun _ -> DoBuild MSBuildRelease)
-Target "Deploy" (fun _ -> 
-    let zipFileName = deployItem
-    File.Create(zipFileName).Dispose()
-    binaryFiles |> Zip buildDir zipFileName)
 Target "FormatCode" (fun _ -> 
     sourceFiles
     |> formatCode fantomasConfig
     |> Log "Formatted Files: ")
-Target "AppVeyor" (fun _ -> PushArtifact(fun p -> { p with Path = deployItem }))
 // Build order
 "Clean" ?=> "Debug"
-"Clean" ?=> "Release" ==> "Deploy" ==> "AppVeyor"
+"Clean" ?=> "Release"
 // start build
 RunTargetOrDefault "Debug"
