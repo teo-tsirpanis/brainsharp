@@ -12,6 +12,15 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		paket.lock = paket.lock
 	EndProjectSection
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test Data", "Test Data", "{055F1803-D947-40A0-8C7D-CCDECAC6B09C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Hello World", "Hello World", "{004A3468-52FE-4F50-9D29-C5CBD25D9648}"
+	ProjectSection(SolutionItems) = preProject
+		test\helloworld.0ut = test\helloworld.0ut
+		test\helloworld.b = test\helloworld.b
+		test\helloworld.in = test\helloworld.in
+	EndProjectSection
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -25,5 +34,8 @@ Global
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{004A3468-52FE-4F50-9D29-C5CBD25D9648} = {055F1803-D947-40A0-8C7D-CCDECAC6B09C}
 	EndGlobalSection
 EndGlobal

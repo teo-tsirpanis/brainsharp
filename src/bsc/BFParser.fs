@@ -17,24 +17,25 @@ module BFParser =
         | Comma
         | BracketLoop of BFSyntax list
     
-    let private whiteSpace = optional (noneOf "+-<>[],.")
+    let private whiteSpace = noneOf "+-<>[],." |> optional
     let private strr v c = whiteSpace >>. stringReturn v c
     let private str v = whiteSpace >>. pstring v
     let private p, pref = createParserForwardedToRef<BFSyntax list, unit>()
     
-    pref := choice [ strr "+" Plus
-                     strr "-" Minus
-                     strr "<" Left
-                     strr ">" Right
-                     strr "." Dot
-                     strr "," Comma
-                     between (str "[") (str "]") p |>> BracketLoop ]
-            |> many
+    pref 
+    := whiteSpace >>. choice [ strr "+" Plus
+                               strr "-" Minus
+                               strr "<" Left
+                               strr ">" Right
+                               strr "." Dot
+                               strr "," Comma
+                               between (str "[") (str "]") p |>> BracketLoop ] 
+       .>> whiteSpace |> many
     
     let brainfuckParser = whiteSpace >>. p .>> whiteSpace .>> eof
     
-    let private makeParseResult x = 
-        match x with
+    let private makeParseResult = 
+        function 
         | Success(x, _, _) -> ok x
         | Failure(x, y, _) -> Trial.fail (ParseError(x, y))
     
