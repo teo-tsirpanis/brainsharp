@@ -5,7 +5,10 @@
 namespace Brainsharp
 
 open Argu
+open BFCode
+open BFParser
 open Chessie.ErrorHandling
+open Interpreter
 open System
 open System.IO
 open System.Text
@@ -52,14 +55,13 @@ module Bsc =
                                                         |> ok
                                                     else fail (FileNotExist s))
                          |> someOr (Console.In |> ok)
-            let! output = a.TryPostProcessResult(<@ OutputFile @>, 
-                                                 fun s -> 
-                                                     if File.Exists(s) then 
-                                                         new StreamWriter(s, 
-                                                                          false, 
-                                                                          Encoding.ASCII) :> TextWriter 
-                                                         |> ok
-                                                     else fail (FileNotExist s))
+            let! output = a.TryPostProcessResult
+                              (<@ OutputFile @>, 
+                               fun s -> 
+                                   let sw = 
+                                       new StreamWriter(s, false, Encoding.ASCII) :> TextWriter
+                                   if File.Exists(s) |> not then sw |> ok
+                                   else sw |> warn (FileExist s))
                           |> someOr (Console.Out |> ok)
             let! expected = a.TryPostProcessResult
                                 (<@ ExpectedOutput @>, 
@@ -73,12 +75,33 @@ module Bsc =
             return source, input, output, expected
         }
     
-    let printMessage = 
-        function 
-        | InvalidArguments -> eprintfn "Usage: %s" (parser.PrintUsage())
-        | _ -> ()
+    let parseAndInterpret (source, input, output : TextWriter, expected) = 
+        trial { 
+            use input = input
+            use output = output
+            let! theCode = parseFile source |> lift makeCodeTree
+            let stringOut = new StringWriter()
+            do! interpretEx input stringOut theCode
+            let stringOut = stringOut.ToString().Trim() //stringOut has a newline at the end.
+            output.Write(stringOut)
+            let! _ = match expected with
+                     | Some x -> 
+                         if x <> stringOut then fail (TestFailure(x, stringOut))
+                         else ok()
+                     | None -> ok()
+            return ()
+        }
     
-    let doResult r = eprintfn "%A" r
+    let getMessage = 
+        function 
+        | FileExist x -> sprintf "File %s already exists. It will be overwritten." x
+        | FileNotExist x -> sprintf "File %s does not exist." x
+        | InvalidArguments -> sprintf "Usage: %s" (parser.PrintUsage())
+        | ParseError(x, _) -> x
+        | TestFailure(expected, found) -> 
+            sprintf "Program output is expected to be\n\t%s\n but it was \n\t%s" 
+                expected found
+        | UnexpectedEndOfInput -> "Unexpected end of input."
     
     [<EntryPoint>]
     let main argv = 
@@ -86,17 +109,13 @@ module Bsc =
             argv
             |> getArgsParser
             >>= parseArgs
+            >>= parseAndInterpret
         match doIt argv with
-        | Pass res -> 
-            eprintfn "Success."
-            doResult res
+        | Ok(_, msgs) -> 
+            msgs |> List.iter (getMessage >> eprintfn "%s")
+            eprintfn "Success"
             0
-        | Warn(res, msgs) -> 
-            eprintfn "Warnings:"
-            msgs |> List.iter printMessage
-            doResult res
-            0
-        | Fail msgs -> 
+        | Bad msgs -> 
             eprintfn "Errors:"
-            msgs |> List.iter printMessage
+            msgs |> List.iter (getMessage >> eprintfn "%s")
             1

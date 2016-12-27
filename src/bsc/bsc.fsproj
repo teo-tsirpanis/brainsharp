@@ -24,7 +24,7 @@
     <WarningLevel>3</WarningLevel>
     <PlatformTarget>$(Platform)</PlatformTarget>
     <StartWorkingDirectory>C:\code\brainsharp\test\</StartWorkingDirectory>
-    <StartArguments>-s helloworld.b</StartArguments>
+    <StartArguments>-s helloworld.b -o helloworld.out -e helloworld.0ut</StartArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>PdbOnly</DebugType>

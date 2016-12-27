@@ -254,3 +254,5 @@ deploy/
 .idea/
 *.sln.iml
 /.project
+
+*.out

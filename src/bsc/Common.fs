@@ -7,7 +7,9 @@ namespace Brainsharp
 open FParsec
 
 type BFError = 
+    | FileExist of string
     | FileNotExist of string
     | InvalidArguments
     | ParseError of string * ParserError
+    | TestFailure of excpected : string * found : string
     | UnexpectedEndOfInput

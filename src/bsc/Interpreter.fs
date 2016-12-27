@@ -11,20 +11,32 @@ module Interpreter =
     open System.Text
     
     let interpret (readProc : unit -> char) writeProc program = 
-        let memory = Array.replicate (UInt16.MaxValue |> int) 0uy
-        let mutable pointer = 0us
-        let readMem() = memory.[pointer |> int]
+        let memSize = UInt16.MaxValue |> int
+        let memory = Array.replicate (memSize) 0uy
+        let mutable pointer = 0
+        let readMem() = 
+                        // (pointer, memory.[pointer]) ||> eprintfn "Memory at %i is %i."
+                        memory.[pointer]
         let writeMem ofs = 
-            memory.[(int pointer)] <- memory.[(int pointer)] + ofs
+                            // (pointer, memory.[pointer], ofs) |||> eprintfn "Changing memory at %i, from %i by %i."
+                            memory.[pointer] <- memory.[pointer] + ofs
         
-        let rec interpretImpl s = 
-            match s with
+        let setPointer ofs = 
+            // (pointer, ofs) ||> eprintfn "Setting pointer from %i, by %i"
+            pointer <- match (pointer + ofs) % memSize with
+                       | x when x < 0 -> memSize - x
+                       | x -> x
+        
+        let rec interpretImpl = 
+            function 
             | MemoryControl x -> writeMem x
-            | PointerControl x -> pointer <- +x
-            | IOWrite -> writeProc (readMem() |> char)
-            | IORead -> writeMem (readProc() |> byte)
+            | PointerControl x -> setPointer x
+            | IOWrite -> (*(memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Writing value %i (%c) at %i";*) writeProc (readMem() |> char)
+            | IORead -> writeMem (readProc() |> byte)(*; (memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Value %i (%c) was written at %i";*)
             | Loop x -> 
-                (if readMem() <> 0uy then x |> List.iter interpretImpl)
+                // eprintfn "Entering loop..."
+                while readMem() <> 0uy do x |> List.iter interpretImpl
+        
         program |> List.iter interpretImpl
     
     let interpretDelegate (readProc : Func<char>) (writeProc : Action<char>) 
@@ -42,7 +54,7 @@ module Interpreter =
                 | -1 -> raise (EofException())
                 | x -> x |> char
             
-            let writeProc (c : char) = writer.Write(c)
+            let writeProc (c : char) = writer.Write c
             interpret readProc writeProc program
             ok()
         with EofException _ -> fail UnexpectedEndOfInput
