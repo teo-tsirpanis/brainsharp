@@ -1,6 +1,7 @@
 --- 
 artifacts: 
   - 
+    name: "Brainsharp-{version}"
     path: ./build/
 build_script: 
   - 
