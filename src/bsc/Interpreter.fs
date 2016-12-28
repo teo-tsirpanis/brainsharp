@@ -10,8 +10,7 @@ module Interpreter =
     open System.IO
     open System.Text
     
-    let interpret (readProc : unit -> char) writeProc program = 
-        let memSize = UInt16.MaxValue |> int
+    let interpret memSize (readProc : unit -> char) writeProc program = 
         let memory = Array.replicate (memSize) 0uy
         let mutable pointer = 0
         let readMem() = 
@@ -39,15 +38,15 @@ module Interpreter =
         
         program |> List.iter interpretImpl
     
-    let interpretDelegate (readProc : Func<char>) (writeProc : Action<char>) 
+    let interpretDelegate memSize (readProc : Func<char>) (writeProc : Action<char>) 
         program = 
         let readProc() = readProc.Invoke()
         let writeProc c = writeProc.Invoke c
-        interpret readProc writeProc program
+        interpret memSize readProc writeProc program
     
     exception private EofException of unit
     
-    let interpretEx (reader : TextReader) (writer : TextWriter) program = 
+    let interpretEx memSize (reader : TextReader) (writer : TextWriter) program = 
         try 
             let readProc() = 
                 match reader.Read() with
@@ -55,14 +54,14 @@ module Interpreter =
                 | x -> x |> char
             
             let writeProc (c : char) = writer.Write c
-            interpret readProc writeProc program
+            interpret memSize readProc writeProc program
             ok()
         with EofException _ -> fail UnexpectedEndOfInput
     
-    let interpretString input program = 
+    let interpretString memSize input program = 
         trial { 
             let reader = new StringReader(input)
             let writer = new StringWriter()
-            do! interpretEx reader writer program
+            do! interpretEx memSize reader writer program
             return writer.ToString()
         }

@@ -18,6 +18,7 @@ type Arguments =
     | [<Unique; AltCommandLine("-i")>] InputFile of path : string
     | [<Unique; AltCommandLine("-o")>] OutputFile of path : string
     | [<Unique; AltCommandLine("-e")>] ExpectedOutput of path : string
+    | [<Unique>] MemorySize of bytes : int
     interface IArgParserTemplate with
         member s.Usage = 
             match s with
@@ -28,6 +29,7 @@ type Arguments =
                 "The file to contain the output of the program. If not specified, it will be written to stdout"
             | ExpectedOutput _ -> 
                 "The file that contains the expected output of the program. Used for testing purposes."
+            | MemorySize _ -> "The size of the memory the program will have. Default is 30000 bytes. On negative numbers, the absolute value will be used."
 
 module Bsc = 
     let parser = ArgumentParser.Create<Arguments>()
@@ -72,16 +74,17 @@ module Bsc =
                                          |> ok
                                      else None |> warn (FileNotExist(s)))
                             |> someOr (None |> ok)
-            return source, input, output, expected
+            let memSize = (match a.GetResult (<@ MemorySize @>, defaultValue = 30000) with | 0 -> 30000 | x -> x) |> abs
+            return source, input, output, expected, memSize
         }
     
-    let parseAndInterpret (source, input, output : TextWriter, expected) = 
+    let parseAndInterpret (source, input, output : TextWriter, expected, memSize) = 
         trial { 
             use input = input
             use output = output
             let! theCode = parseFile source |> lift makeCodeTree
             let stringOut = new StringWriter()
-            do! interpretEx input stringOut theCode
+            do! interpretEx memSize input stringOut theCode
             let stringOut = stringOut.ToString().Trim() //stringOut has a newline at the end.
             output.Write(stringOut)
             let! _ = match expected with
