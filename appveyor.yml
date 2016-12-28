@@ -1,9 +1,9 @@
 --- 
 artifacts: 
   - 
-    name: "Brainsharp-{version}"
+    name: "Brainsharp-$(APPVEYOR_BUILD_VERSION)"
     path: ./build/
 build_script: 
   - 
     cmd: "build.cmd Release"
-version: "0.1.{build}"
+version: "1.0.{build}"
