@@ -37,6 +37,9 @@ type Arguments =
                 "Enables measurement of the execution time of the program."
 
 module Bsc = 
+    [<Literal>]
+    let DisplayExpectenFoundTreshold = 200
+    
     let defaultMemorySize = UInt16.MaxValue
     let parser = ArgumentParser.Create<Arguments>()
     
@@ -72,7 +75,6 @@ module Bsc =
                                  fun s -> 
                                      if File.Exists(s) then 
                                          File.ReadAllText(s, Encoding.ASCII)
-                                             .Trim()
                                          |> Some
                                          |> ok
                                      else None |> warn (FileNotExist(s)))
@@ -105,7 +107,7 @@ module Bsc =
                      |> warn
                      <| ()
                  | false -> ok())
-            let stringOut = stringOut.ToString().Trim() //stringOut has a newline at the end.
+            let stringOut = stringOut.ToString()
             output.Write(stringOut)
             do! (match expected with
                  | Some x -> 
@@ -126,8 +128,12 @@ module Bsc =
         | InvalidArguments -> sprintf "Usage: %s" (parser.PrintUsage())
         | ParseError(x, _) -> x
         | TestFailure(expected, found) -> 
-            sprintf "Program output is expected to be\n\t%s\n but it was \n\t%s" 
-                expected found
+            if expected.Length + found.Length < DisplayExpectenFoundTreshold * 2 then 
+                sprintf 
+                    "Program output is expected to be\n\t%s\n but it was \n\t%s" 
+                    expected found
+            else 
+                "Program output is different than the expected, but it is not shown, because of its size."
         | UnexpectedEndOfInput -> "Unexpected end of input."
     
     [<EntryPoint>]
