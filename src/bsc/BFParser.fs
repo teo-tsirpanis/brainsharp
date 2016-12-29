@@ -17,7 +17,11 @@ module BFParser =
         | Comma
         | BracketLoop of BFSyntax list
     
-    let private whiteSpace = noneOf "+-<>[],." |> optional
+    let private whiteSpace = 
+        noneOf "+-<>[],."
+        |> many
+        |> optional
+    
     let private strr v c = whiteSpace >>. stringReturn v c
     let private str v = whiteSpace >>. pstring v
     let private p, pref = createParserForwardedToRef<BFSyntax list, unit>()
