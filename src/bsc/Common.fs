@@ -24,3 +24,12 @@ module Common =
         function 
         | Some x -> x
         | None -> def
+    
+    /// <summary>
+    /// Overkills <c>state</c>. Literally.
+    /// It applies <c>f</c> to <c>state</c> until <c>f</c> cannot change it.
+    /// </summary>
+    let rec overKill f state = 
+        let state' = f state
+        if state = state' then state
+        else overKill f state'
