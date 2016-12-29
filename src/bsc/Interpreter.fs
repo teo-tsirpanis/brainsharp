@@ -14,11 +14,11 @@ module Interpreter =
         let memory = Array.replicate (memSize) 0uy
         let mutable pointer = 0
         let readMem() = 
-                        // (pointer, memory.[pointer]) ||> eprintfn "Memory at %i is %i."
-                        memory.[pointer]
+            // (pointer, memory.[pointer]) ||> eprintfn "Memory at %i is %i."
+            memory.[pointer]
         let writeMem ofs = 
-                            // (pointer, memory.[pointer], ofs) |||> eprintfn "Changing memory at %i, from %i by %i."
-                            memory.[pointer] <- memory.[pointer] + ofs
+            // (pointer, memory.[pointer], ofs) |||> eprintfn "Changing memory at %i, from %i by %i."
+            memory.[pointer] <- memory.[pointer] + ofs
         
         let setPointer ofs = 
             // (pointer, ofs) ||> eprintfn "Setting pointer from %i, by %i"
@@ -30,16 +30,19 @@ module Interpreter =
             function 
             | MemoryControl x -> writeMem x
             | PointerControl x -> setPointer x
-            | IOWrite -> (*(memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Writing value %i (%c) at %i";*) writeProc (readMem() |> char)
-            | IORead -> writeMem (readProc() |> byte)(*; (memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Value %i (%c) was written at %i";*)
+            | IOWrite -> 
+                (*(memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Writing value %i (%c) at %i";*) writeProc (readMem() |> char)
+            | IORead -> writeMem (readProc() |> byte)
+            (*; (memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Value %i (%c) was written at %i";*)
             | Loop x -> 
                 // eprintfn "Entering loop..."
-                while readMem() <> 0uy do x |> List.iter interpretImpl
+                while readMem() <> 0uy do
+                    x |> List.iter interpretImpl
         
         program |> List.iter interpretImpl
     
-    let interpretDelegate memSize (readProc : Func<char>) (writeProc : Action<char>) 
-        program = 
+    let interpretDelegate memSize (readProc : Func<char>) 
+        (writeProc : Action<char>) program = 
         let readProc() = readProc.Invoke()
         let writeProc c = writeProc.Invoke c
         interpret memSize readProc writeProc program

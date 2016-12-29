@@ -10,6 +10,7 @@ open BFParser
 open Chessie.ErrorHandling
 open Interpreter
 open System
+open System.Diagnostics
 open System.IO
 open System.Text
 
@@ -19,6 +20,7 @@ type Arguments =
     | [<Unique; AltCommandLine("-o")>] OutputFile of path : string
     | [<Unique; AltCommandLine("-e")>] ExpectedOutput of path : string
     | [<Unique>] MemorySize of bytes : int
+    | Profile
     interface IArgParserTemplate with
         member s.Usage = 
             match s with
@@ -29,9 +31,13 @@ type Arguments =
                 "The file to contain the output of the program. If not specified, it will be written to stdout"
             | ExpectedOutput _ -> 
                 "The file that contains the expected output of the program. Used for testing purposes."
-            | MemorySize _ -> "The size of the memory the program will have. Default is 30000 bytes. On negative numbers, the absolute value will be used."
+            | MemorySize _ -> 
+                "The size of the memory the program will have. Default is 65536 bytes. On negative numbers, the absolute value will be used."
+            | Profile -> 
+                "Enables measurement of the execution time of the program."
 
 module Bsc = 
+    let defaultMemorySize = UInt16.MaxValue
     let parser = ArgumentParser.Create<Arguments>()
     
     let getArgsParser argv = 
@@ -41,10 +47,6 @@ module Bsc =
     
     let parseArgs (a : ParseResults<Arguments>) = 
         trial { 
-            let someOr def = 
-                function 
-                | Some x -> x
-                | None -> def
             let! source = a.PostProcessResult(<@ SourceFile @>, 
                                               fun s -> 
                                                   if File.Exists(s) then ok s
@@ -70,34 +72,56 @@ module Bsc =
                                  fun s -> 
                                      if File.Exists(s) then 
                                          File.ReadAllText(s, Encoding.ASCII)
+                                             .Trim()
                                          |> Some
                                          |> ok
                                      else None |> warn (FileNotExist(s)))
                             |> someOr (None |> ok)
-            let memSize = (match a.GetResult (<@ MemorySize @>, defaultValue = 30000) with | 0 -> 30000 | x -> x) |> abs
-            return source, input, output, expected, memSize
+            let memSize = 
+                match a.TryGetResult(<@ MemorySize @>) with
+                | None | Some 0 -> defaultMemorySize |> int
+                | Some x -> x |> abs
+            
+            let doProfile = a.Contains(<@ Profile @>)
+            return source, input, output, expected, memSize, doProfile
         }
     
-    let parseAndInterpret (source, input, output : TextWriter, expected, memSize) = 
+    let parseAndInterpret (source, input, output : TextWriter, expected, memSize, 
+                           doProfile) = 
         trial { 
             use input = input
             use output = output
             let! theCode = parseFile source |> lift makeCodeTree
+            // eprintfn "Code is parsed."
             let stringOut = new StringWriter()
+            let sw = new Stopwatch()
+            sw.Start()
             do! interpretEx memSize input stringOut theCode
+            sw.Stop()
+            do! (match doProfile with
+                 | true -> 
+                     sw.Elapsed
+                     |> ExecutionTime
+                     |> warn
+                     <| ()
+                 | false -> ok())
             let stringOut = stringOut.ToString().Trim() //stringOut has a newline at the end.
             output.Write(stringOut)
-            let! _ = match expected with
-                     | Some x -> 
-                         if x <> stringOut then fail (TestFailure(x, stringOut))
-                         else ok()
-                     | None -> ok()
+            do! (match expected with
+                 | Some x -> 
+                     if x <> stringOut then fail (TestFailure(x, stringOut))
+                     else ok()
+                 | None -> ok())
             return ()
         }
     
     let getMessage = 
         function 
-        | FileExist x -> sprintf "File %s already exists. It will be overwritten." x
+        | ExecutionTime x -> 
+            (x.Hours, x.Minutes, x.Seconds, x.Milliseconds) 
+            ||||> sprintf "Execution time (H:M:S:MS): %i:%i:%i:%i"
+        | FileExist x -> 
+            sprintf "File %s already exists. It will be overwritten." x
         | FileNotExist x -> sprintf "File %s does not exist." x
         | InvalidArguments -> sprintf "Usage: %s" (parser.PrintUsage())
         | ParseError(x, _) -> x
@@ -115,10 +139,12 @@ module Bsc =
             >>= parseAndInterpret
         match doIt argv with
         | Ok(_, msgs) -> 
+            eprintfn ""
             msgs |> List.iter (getMessage >> eprintfn "%s")
             eprintfn "Success"
             0
         | Bad msgs -> 
+            eprintfn ""
             eprintfn "Errors:"
             msgs |> List.iter (getMessage >> eprintfn "%s")
             1

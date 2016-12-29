@@ -5,11 +5,22 @@
 namespace Brainsharp
 
 open FParsec
+open System
 
 type BFError = 
+    | ExecutionTime of TimeSpan
     | FileExist of string
     | FileNotExist of string
     | InvalidArguments
     | ParseError of string * ParserError
     | TestFailure of excpected : string * found : string
     | UnexpectedEndOfInput
+
+[<AutoOpen>]
+module Common = 
+    let (||||>) (a, b, c, d) f = f a b c d
+    
+    let someOr def = 
+        function 
+        | Some x -> x
+        | None -> def
