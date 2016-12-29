@@ -22,7 +22,7 @@ let appName = "BrainSharp"
 let version = 
     match buildServer with
     | AppVeyor -> AppVeyorEnvironment.BuildVersion
-    | _ -> "1.0" // or retrieve from CI server
+    | _ -> "1.1" // or retrieve from CI server
 
 let buildDir = "./build/"
 
