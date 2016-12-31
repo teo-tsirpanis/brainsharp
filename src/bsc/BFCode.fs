@@ -8,6 +8,7 @@ type BFCodeTree = BFToken list
 
 and BFToken = 
     | MemoryControl of byte
+    | MemorySet of byte
     | PointerControl of int
     | IOWrite
     | IORead

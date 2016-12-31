@@ -18,11 +18,18 @@ module Interpreter =
             (pointer, memory.[pointer]) ||> eprintfn "Memory at %i is %i."
             #endif
             memory.[pointer]
+
         let writeMem ofs = 
             #if DEBUG
             (pointer, memory.[pointer], ofs) |||> eprintfn "Changing memory at %i, from %i by %i."
             #endif
             memory.[pointer] <- memory.[pointer] + ofs
+
+        let setMem x =
+            #if DEBUG
+            (pointer, x) ||> eprintfn "Setting memory at %i to %i."
+            #endif
+            memory.[pointer] <- x
         
         let setPointer ofs =
             #if DEBUG
@@ -35,6 +42,7 @@ module Interpreter =
         let rec interpretImpl = 
             function 
             | MemoryControl x -> writeMem x
+            | MemorySet x -> setMem x
             | PointerControl x -> setPointer x
             | IOWrite -> 
                 #if DEBUG
