@@ -14,14 +14,20 @@ module Interpreter =
         let memory = Array.replicate (memSize) 0uy
         let mutable pointer = 0
         let readMem() = 
-            // (pointer, memory.[pointer]) ||> eprintfn "Memory at %i is %i."
+            #if DEBUG
+            (pointer, memory.[pointer]) ||> eprintfn "Memory at %i is %i."
+            #endif
             memory.[pointer]
         let writeMem ofs = 
-            // (pointer, memory.[pointer], ofs) |||> eprintfn "Changing memory at %i, from %i by %i."
+            #if DEBUG
+            (pointer, memory.[pointer], ofs) |||> eprintfn "Changing memory at %i, from %i by %i."
+            #endif
             memory.[pointer] <- memory.[pointer] + ofs
         
-        let setPointer ofs = 
-            // (pointer, ofs) ||> eprintfn "Setting pointer from %i, by %i"
+        let setPointer ofs =
+            #if DEBUG
+            (pointer, ofs) ||> eprintfn "Setting pointer from %i, by %i"
+            #endif
             pointer <- match (pointer + ofs) % memSize with
                        | x when x < 0 -> memSize - x
                        | x -> x
@@ -31,11 +37,18 @@ module Interpreter =
             | MemoryControl x -> writeMem x
             | PointerControl x -> setPointer x
             | IOWrite -> 
-                (*(memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Writing value %i (%c) at %i";*) writeProc (readMem() |> char)
+                #if DEBUG
+                (memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Writing value %i (%c) at %i"
+                #endif
+                writeProc (readMem() |> char)
             | IORead -> writeMem (readProc() |> byte)
-            (*; (memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Value %i (%c) was written at %i";*)
+                        #if DEBUG
+                        (memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Value %i (%c) was written at %i";
+                        #endif
             | Loop x -> 
-                // eprintfn "Entering loop..."
+                #if DEBUG
+                eprintfn "Entering loop..."
+                #endif
                 while readMem() <> 0uy do
                     x |> List.iter interpretImpl
         
