@@ -9,6 +9,7 @@ open BFCode
 open BFParser
 open Chessie.ErrorHandling
 open Interpreter
+open Optimizer
 open System
 open System.Diagnostics
 open System.IO
@@ -21,6 +22,7 @@ type Arguments =
     | [<Unique; AltCommandLine("-e")>] ExpectedOutput of path : string
     | [<Unique>] MemorySize of bytes : int
     | Profile
+    | Optimize
     interface IArgParserTemplate with
         member s.Usage = 
             match s with
@@ -35,6 +37,7 @@ type Arguments =
                 "The size of the memory the program will have. Default is 65536 bytes. On negative numbers, the absolute value will be used."
             | Profile -> 
                 "Enables measurement of the execution time of the program."
+            | Optimize -> "Enables optimization of the program."
 
 module Bsc = 
     [<Literal>]
@@ -85,15 +88,16 @@ module Bsc =
                 | Some x -> x |> abs
             
             let doProfile = a.Contains(<@ Profile @>)
-            return source, input, output, expected, memSize, doProfile
+            let doOptimize = a.Contains (<@ Optimize @>)
+            return source, input, output, expected, memSize, doProfile, doOptimize
         }
     
     let parseAndInterpret (source, input, output : TextWriter, expected, memSize, 
-                           doProfile) = 
+                           doProfile, doOptimize) = 
         trial { 
             use input = input
             use output = output
-            let! theCode = parseFile source |> lift makeCodeTree
+            let! theCode = parseFile source |> lift makeCodeTree |> lift (if doOptimize then optimize else id)
             // eprintfn "Code is parsed."
             let stringOut = new StringWriter()
             let sw = new Stopwatch()

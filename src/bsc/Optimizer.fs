@@ -2,11 +2,38 @@
 // 
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
-
 namespace Brainsharp
 
 open BFCode
-open RLE
+open Microsoft.FSharp.Reflection
 
-module Optimizer =
-    let optimize program = overKill id program
+module Optimizer = 
+    let getCodeTag = 
+        function 
+        | MemoryControl _ -> 1
+        | PointerControl _ -> 2
+        | _ -> 0
+    
+    let optimizeRLE program = 
+        program
+        |> RLE.groupAdjacentPairs getCodeTag (Some 0)
+        |> Array.map (fun x -> 
+               match Array.head x with
+               | PointerControl _ -> 
+                   x
+                   |> Array.sumBy (function 
+                          | PointerControl x -> x
+                          | _ -> 0)
+                   |> PointerControl
+               | MemoryControl _ -> 
+                   x
+                   |> Array.map (function 
+                          | MemoryControl x -> x
+                          | _ -> 0uy)
+                   |> Array.sumBy int
+                   |> byte
+                   |> MemoryControl
+               | x -> x)
+        |> List.ofArray
+    
+    let optimize program = program |> overKill optimizeRLE
