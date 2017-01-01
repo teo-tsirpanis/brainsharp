@@ -4,15 +4,13 @@
 // http://opensource.org/licenses/mit-license.php
 namespace Brainsharp
 
-type BFCodeTree = BFToken list
-
-and BFToken = 
+type BFToken = 
     | MemoryControl of byte
     | MemorySet of byte
     | PointerControl of int
     | IOWrite
     | IORead
-    | Loop of BFCodeTree
+    | Loop of BFToken list
 
 module BFCode = 
     open BFParser

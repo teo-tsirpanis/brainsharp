@@ -18,15 +18,15 @@ module RLE =
                 let fhead = head |> f
                 
                 let newElement = 
-                    if optEqual fnone fhead then [| head |]
+                    if optEqual fnone fhead then [head]
                     else 
                         l
                         |> Seq.takeWhile (f >> ((=) fhead))
-                        |> Array.ofSeq
+                        |> List.ofSeq
                 
                 let newb = b @ [ newElement ]
                 pack (Seq.skip newElement.Length l) newb
-        pack l [] |> Array.ofSeq
+        pack l []
     
     /// <summary>
     /// Encodes a sequence of objects using Run-length Encoding.
@@ -37,7 +37,7 @@ module RLE =
     /// For example, <c>encode [7;7;7]</c>, will return <c>(3, 7)</c>.
     /// </returns>
     let encode l = 
-        groupAdjacentPairs id None l |> Array.map (fun x -> x.Length, x.[0])
+        groupAdjacentPairs id None l |> List.map (fun x -> x.Length, x.[0])
     
     /// <summary>
     /// Decodes a pair of integers and objects returned by <c>encode</c>.

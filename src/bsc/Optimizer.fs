@@ -14,32 +14,34 @@ module Optimizer =
         | PointerControl _ -> 2
         | _ -> 0
     
-    let optimizeRLE program = 
+    let rec optimizeRLE program = 
         program
         |> RLE.groupAdjacentPairs getCodeTag (Some 0)
-        |> Array.map (fun x -> 
-               match Array.head x with
-               | PointerControl _ -> 
+        |> List.collect (fun x -> 
+               match x with
+               | PointerControl _ :: _ -> 
                    x
-                   |> Array.sumBy (function 
+                   |> List.sumBy (function 
                           | PointerControl x -> x
                           | _ -> 0)
                    |> PointerControl
-               | MemoryControl _ -> 
+                   |> List.singleton
+               | MemoryControl _ :: _ -> 
                    x
-                   |> Array.map (function 
-                          | MemoryControl x -> x
-                          | _ -> 0uy)
-                   |> Array.sumBy int
+                   |> List.sumBy (function 
+                          | MemoryControl x -> x |> int
+                          | _ -> 0)
                    |> byte
                    |> MemoryControl
+                   |> List.singleton
+               | [Loop x] -> x |> optimizeRLE |> Loop |> List.singleton
                | x -> x)
-        |> List.ofArray
     
-    let optimizeClearLoops program = 
+    let rec optimizeClearLoops program = 
         program |> List.map (function 
                        | Loop([ MemoryControl x ]) when x = 1uy || x = 255uy -> 
                            MemorySet 0uy
+                       | Loop x -> x |> optimizeClearLoops |> Loop
                        | x -> x)
     
     let optimize program = 
