@@ -13,10 +13,18 @@ open Fake.AssemblyInfoFile
 open Fake.Git
 open Fantomas.FakeHelpers
 open Fantomas.FormatConfig
+open System
 open System.IO
 
 // Directories
-let appName = "BrainSharp"
+[<Literal>]
+let AppName = "Brainsharp"
+
+[<Literal>]
+let AppVersionMessage = 
+    "Brainsharp Version {0}. \nGit commit hash: {1}. \nBuilt on {2} (UTC)." 
+    + "\nCreated by Theodore Tsirpanis and licensed under the MIT License." 
+    + "\nCheck out new releases on https://github.com/teo-tsirpanis/brainsharp/releases"
 
 // version info
 let version = 
@@ -38,6 +46,8 @@ let sourceFiles = !!"src/**/*.fs" ++ "src/**/*.fsx" ++ "build.fsx"
 Target "Clean" (fun _ -> CleanDir buildDir)
 
 let DoBuild f = 
+    let gitHash = Information.getCurrentHash()
+    let buildDate = DateTime.UtcNow.ToString()
     CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" 
         [ Attribute.Title "A Brainfuck toolchain for .NET"
           
@@ -46,7 +56,13 @@ let DoBuild f =
           
           Attribute.Copyright 
               "Licensed under the MIT License. Created by Theodore Tsirpanis."
-          Attribute.Metadata("Git Hash", Information.getCurrentHash())
+          Attribute.Metadata("Git Hash", gitHash)
+          Attribute.Metadata("Build Date", buildDate)
+          
+          Attribute.Metadata
+              ("Version Message", 
+               System.String.Format
+                   (AppVersionMessage, version, gitHash, buildDate))
           Attribute.Version version ]
     f buildDir "Build" appReferences |> Log "AppBuild-Output: "
 

@@ -13,28 +13,34 @@ module Interpreter =
     let interpret memSize (readProc : unit -> char) writeProc program = 
         let memory = Array.replicate (memSize) 0uy
         let mutable pointer = 0
-        let readMem() = 
-            #if DEBUG
+        
+        let readMem() =
+#if DEBUG 
             (pointer, memory.[pointer]) ||> eprintfn "Memory at %i is %i."
-            #endif
+#endif
+            
             memory.[pointer]
-
-        let writeMem ofs = 
-            #if DEBUG
-            (pointer, memory.[pointer], ofs) |||> eprintfn "Changing memory at %i, from %i by %i."
-            #endif
+        
+        let writeMem ofs =
+#if DEBUG 
+            (pointer, memory.[pointer], ofs) 
+            |||> eprintfn "Changing memory at %i, from %i by %i."
+#endif
+            
             memory.[pointer] <- memory.[pointer] + ofs
-
+        
         let setMem x =
-            #if DEBUG
+#if DEBUG 
             (pointer, x) ||> eprintfn "Setting memory at %i to %i."
-            #endif
+#endif
+            
             memory.[pointer] <- x
         
         let setPointer ofs =
-            #if DEBUG
+#if DEBUG 
             (pointer, ofs) ||> eprintfn "Setting pointer from %i, by %i"
-            #endif
+#endif
+            
             pointer <- match (pointer + ofs) % memSize with
                        | x when x < 0 -> memSize - x
                        | x -> x
@@ -44,19 +50,25 @@ module Interpreter =
             | MemoryControl x -> writeMem x
             | MemorySet x -> setMem x
             | PointerControl x -> setPointer x
-            | IOWrite -> 
-                #if DEBUG
-                (memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Writing value %i (%c) at %i"
-                #endif
+            | IOWrite ->
+#if DEBUG 
+                (memory.[pointer], memory.[pointer] |> char, pointer) 
+                |||> eprintfn "Writing value %i (%c) at %i"
+#endif
+                
                 writeProc (readMem() |> char)
-            | IORead -> writeMem (readProc() |> byte)
-                        #if DEBUG
-                        (memory.[pointer], memory.[pointer] |> char, pointer) |||> eprintfn "Value %i (%c) was written at %i";
-                        #endif
-            | Loop x -> 
-                #if DEBUG
+            | IORead -> 
+                writeMem (readProc() |> byte)
+#if DEBUG
+                (memory.[pointer], memory.[pointer] |> char, pointer) 
+                |||> eprintfn "Value %i (%c) was written at %i"
+#endif
+                
+            | Loop x ->
+#if DEBUG 
                 eprintfn "Entering loop..."
-                #endif
+#endif
+                
                 while readMem() <> 0uy do
                     x |> List.iter interpretImpl
         

@@ -13,91 +13,25 @@ open Optimizer
 open System
 open System.Diagnostics
 open System.IO
+open System.Reflection
 open System.Text
-
-type Arguments = 
-    | [<ExactlyOnce; AltCommandLine("-s")>] SourceFile of path : string
-    | [<Unique; AltCommandLine("-i")>] InputFile of path : string
-    | [<Unique; AltCommandLine("-o")>] OutputFile of path : string
-    | [<Unique; AltCommandLine("-e")>] ExpectedOutput of path : string
-    | [<Unique>] MemorySize of bytes : int
-    | Profile
-    | Optimize
-    interface IArgParserTemplate with
-        member s.Usage = 
-            match s with
-            | SourceFile _ -> "The file containing the source code to be run."
-            | InputFile _ -> 
-                "The file containing the input to the program. If not specified, it will be read from stdin."
-            | OutputFile _ -> 
-                "The file to contain the output of the program. If not specified, it will be written to stdout"
-            | ExpectedOutput _ -> 
-                "The file that contains the expected output of the program. Used for testing purposes."
-            | MemorySize _ -> 
-                "The size of the memory the program will have. Default is 65536 bytes. On negative numbers, the absolute value will be used."
-            | Profile -> 
-                "Enables measurement of the execution time of the program."
-            | Optimize -> "Enables optimization of the program."
 
 module Bsc = 
     [<Literal>]
     let DisplayExpectenFoundTreshold = 200
     
-    let defaultMemorySize = UInt16.MaxValue
-    let parser = ArgumentParser.Create<Arguments>()
+    let parser = ArgumentParser.Create<_>()
+    let getArgsParser argv = parser.Parse argv |> ok
     
-    let getArgsParser argv = 
-        try 
-            parser.Parse argv |> ok
-        with _ -> fail InvalidArguments
-    
-    let parseArgs (a : ParseResults<Arguments>) = 
-        trial { 
-            let! source = a.PostProcessResult(<@ SourceFile @>, 
-                                              fun s -> 
-                                                  if File.Exists(s) then ok s
-                                                  else fail (FileNotExist s))
-            let! input = a.TryPostProcessResult(<@ InputFile @>, 
-                                                fun s -> 
-                                                    if File.Exists(s) then 
-                                                        new StreamReader(s, 
-                                                                         Encoding.ASCII) :> TextReader 
-                                                        |> ok
-                                                    else fail (FileNotExist s))
-                         |> someOr (Console.In |> ok)
-            let! output = a.TryPostProcessResult
-                              (<@ OutputFile @>, 
-                               fun s -> 
-                                   let sw = 
-                                       new StreamWriter(s, false, Encoding.ASCII) :> TextWriter
-                                   if File.Exists(s) |> not then sw |> ok
-                                   else sw |> warn (FileExist s))
-                          |> someOr (Console.Out |> ok)
-            let! expected = a.TryPostProcessResult
-                                (<@ ExpectedOutput @>, 
-                                 fun s -> 
-                                     if File.Exists(s) then 
-                                         File.ReadAllText(s, Encoding.ASCII)
-                                         |> Some
-                                         |> ok
-                                     else None |> warn (FileNotExist(s)))
-                            |> someOr (None |> ok)
-            let memSize = 
-                match a.TryGetResult(<@ MemorySize @>) with
-                | None | Some 0 -> defaultMemorySize |> int
-                | Some x -> x |> abs
-            
-            let doProfile = a.Contains(<@ Profile @>)
-            let doOptimize = a.Contains (<@ Optimize @>)
-            return source, input, output, expected, memSize, doProfile, doOptimize
-        }
-    
-    let parseAndInterpret (source, input, output : TextWriter, expected, memSize, 
-                           doProfile, doOptimize) = 
+    let doRun (source, input, output : TextWriter, expected, memSize, doProfile, 
+               doOptimize) = 
         trial { 
             use input = input
             use output = output
-            let! theCode = parseFile source |> lift makeCodeTree |> lift (if doOptimize then optimize else id)
+            let! theCode = parseFile source
+                           |> lift makeCodeTree
+                           |> lift (if doOptimize then optimize
+                                    else id)
             // eprintfn "Code is parsed."
             let stringOut = new StringWriter()
             let sw = new Stopwatch()
@@ -121,6 +55,11 @@ module Bsc =
             return ()
         }
     
+    let splitArgs = 
+        function 
+        | RunArgs(a, b, c, d, e, f, g) -> doRun (a, b, c, d, e, f, g)
+        | NoArgs -> ok()
+    
     let getMessage = 
         function 
         | ExecutionTime x -> 
@@ -129,8 +68,9 @@ module Bsc =
         | FileExist x -> 
             sprintf "File %s already exists. It will be overwritten." x
         | FileNotExist x -> sprintf "File %s does not exist." x
-        | InvalidArguments -> sprintf "Usage: %s" (parser.PrintUsage())
         | ParseError(x, _) -> x
+        | ShowVersion -> 
+            AssemblyVersionInformation.AssemblyMetadata_Version_Message
         | TestFailure(expected, found) -> 
             if expected.Length + found.Length < DisplayExpectenFoundTreshold * 2 then 
                 sprintf 
@@ -142,19 +82,28 @@ module Bsc =
     
     [<EntryPoint>]
     let main argv = 
-        let doIt argv = 
-            argv
-            |> getArgsParser
-            >>= parseArgs
-            >>= parseAndInterpret
-        match doIt argv with
-        | Ok(_, msgs) -> 
-            eprintfn ""
-            msgs |> List.iter (getMessage >> eprintfn "%s")
-            eprintfn "Success"
-            0
-        | Bad msgs -> 
-            eprintfn ""
-            eprintfn "Errors:"
-            msgs |> List.iter (getMessage >> eprintfn "%s")
-            1
+        try 
+            let doIt argv = 
+                argv
+                |> getArgsParser
+                >>= parseArguments
+                >>= splitArgs
+            match doIt argv with
+            | Ok(_, msgs) -> 
+                eprintfn ""
+                msgs |> List.iter (getMessage >> eprintfn "%s")
+                eprintfn "Success"
+                0
+            | Bad msgs -> 
+                eprintfn ""
+                eprintfn "Errors:"
+                msgs |> List.iter (getMessage >> eprintfn "%s")
+                1
+        with e -> 
+            match e with
+            | :? ArguParseException -> 
+                eprintfn "%s" e.Message
+                0
+            | _ -> 
+                eprintfn "%O" e
+                1

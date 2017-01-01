@@ -6,7 +6,6 @@ namespace Brainsharp
 
 /// <summary>Run-length Encoding functions.</summary>
 module RLE = 
-    
     let groupAdjacentPairs f fnone l = 
         let rec pack l b = 
             let optEqual a b = 

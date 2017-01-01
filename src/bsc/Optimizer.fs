@@ -35,9 +35,12 @@ module Optimizer =
                    |> MemoryControl
                | x -> x)
         |> List.ofArray
-
-    let optimizeClearLoops program =
-        program 
-        |> List.map (function | Loop ([MemoryControl x]) when x = 1uy || x = 255uy -> MemorySet 0uy | x -> x)
     
-    let optimize program = program |> overKill (optimizeRLE >> optimizeClearLoops)
+    let optimizeClearLoops program = 
+        program |> List.map (function 
+                       | Loop([ MemoryControl x ]) when x = 1uy || x = 255uy -> 
+                           MemorySet 0uy
+                       | x -> x)
+    
+    let optimize program = 
+        program |> overKill (optimizeRLE >> optimizeClearLoops)

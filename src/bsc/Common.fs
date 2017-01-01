@@ -11,8 +11,8 @@ type BFError =
     | ExecutionTime of TimeSpan
     | FileExist of string
     | FileNotExist of string
-    | InvalidArguments
     | ParseError of string * ParserError
+    | ShowVersion
     | TestFailure of excpected : string * found : string
     | UnexpectedEndOfInput
 
