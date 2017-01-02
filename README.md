@@ -24,6 +24,11 @@ For the impatient (or risky) ones, there is a
 [CI server](https://ci.appveyor.com/project/teo-tsirpanis/brainsharp)
 ready to deliver them the bleeding edge of Brainsharp's development.
 
+## Usage
+Just run `bsc --help` (or `mono bsc.exe --help` if you are on Linux).
+
+> Note: The command line parameters may change between versions.
+
 ## Status
 * Interpreter: _Complete_
 * Optimizer: _Under development_
