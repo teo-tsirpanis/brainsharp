@@ -13,66 +13,38 @@ module Interpreter =
     let interpret memSize (readProc : unit -> char) writeProc program = 
         let memory = Array.replicate (memSize) 0uy
         let mutable pointer = 0
+        let mutable instructionsRun = 0
         
-        let readMem() =
-#if DEBUG 
-            (pointer, memory.[pointer]) ||> eprintfn "Memory at %i is %i."
-#endif
-            
-            memory.[pointer]
+        let readMem() = memory.[pointer]
         
-        let writeMem ofs =
-#if DEBUG 
-            (pointer, memory.[pointer], ofs) 
-            |||> eprintfn "Changing memory at %i, from %i by %i."
-#endif
-            
-            memory.[pointer] <- memory.[pointer] + ofs
+        let writeMem ofs = memory.[pointer] <- memory.[pointer] + ofs
         
-        let setMem x =
-#if DEBUG 
-            (pointer, x) ||> eprintfn "Setting memory at %i to %i."
-#endif
-            
-            memory.[pointer] <- x
+        let setMem x = memory.[pointer] <- x
         
         let setPointer ofs =
-#if DEBUG 
-            (pointer, ofs) ||> eprintfn "Setting pointer from %i, by %i"
-#endif
-            
-            pointer <- match (pointer + ofs) % memSize with
-                       | x when x < 0 -> memSize - x
-                       | x -> x
+                    pointer <- match (pointer + ofs) % memSize with
+                                | x when x < 0 -> memSize - x
+                                | x -> x
         
-        let rec interpretImpl = 
+        let rec interpretImpl' loopAction = 
             function 
             | MemoryControl x -> writeMem x
             | MemorySet x -> setMem x
             | PointerControl x -> setPointer x
-            | IOWrite ->
-#if DEBUG 
-                (memory.[pointer], memory.[pointer] |> char, pointer) 
-                |||> eprintfn "Writing value %i (%c) at %i"
-#endif
-                
-                writeProc (readMem() |> char)
-            | IORead -> 
-                writeMem (readProc() |> byte)
-#if DEBUG
-                (memory.[pointer], memory.[pointer] |> char, pointer) 
-                |||> eprintfn "Value %i (%c) was written at %i"
-#endif
-                
+            | IOWrite -> writeProc (readMem() |> char)
+            | IORead -> writeMem (readProc() |> byte)
             | Loop x ->
-#if DEBUG 
-                eprintfn "Entering loop..."
-#endif
-                
                 while readMem() <> 0uy do
-                    x |> List.iter interpretImpl
+                    x |> List.iter loopAction
+
+        let rec interpretImpl x =
+            instructionsRun <- instructionsRun + 1
+            interpretImpl' interpretImpl x
+            
         
         program |> List.iter interpretImpl
+
+        instructionsRun
     
     let interpretDelegate memSize (readProc : Func<char>) 
         (writeProc : Action<char>) program = 
@@ -90,14 +62,13 @@ module Interpreter =
                 | x -> x |> char
             
             let writeProc (c : char) = writer.Write c
-            interpret memSize readProc writeProc program
-            ok()
+            interpret memSize readProc writeProc program |> ok
         with EofException _ -> fail UnexpectedEndOfInput
     
     let interpretString memSize input program = 
         trial { 
             let reader = new StringReader(input)
             let writer = new StringWriter()
-            do! interpretEx memSize reader writer program
-            return writer.ToString()
+            let! ic = interpretEx memSize reader writer program
+            return writer.ToString(), ic
         }

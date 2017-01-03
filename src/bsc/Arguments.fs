@@ -28,7 +28,7 @@ type RunArguments =
             | MemorySize _ -> 
                 "The size of the memory the program will have. Default is 65536 bytes. On negative numbers, the absolute value will be used."
             | Profile -> 
-                "Enables measurement of the execution time of the program."
+                "Enables performance measurement of the program."
             | Optimize -> "Enables optimization of the program."
 
 type CliArguments = 
