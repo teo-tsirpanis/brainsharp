@@ -14,17 +14,14 @@ module Interpreter =
         let memory = Array.replicate (memSize) 0uy
         let mutable pointer = 0
         let mutable instructionsRun = 0
-        
         let readMem() = memory.[pointer]
-        
         let writeMem ofs = memory.[pointer] <- memory.[pointer] + ofs
-        
         let setMem x = memory.[pointer] <- x
         
-        let setPointer ofs =
-                    pointer <- match (pointer + ofs) % memSize with
-                                | x when x < 0 -> memSize - x
-                                | x -> x
+        let setPointer ofs = 
+            pointer <- match (pointer + ofs) % memSize with
+                       | x when x < 0 -> memSize - x
+                       | x -> x
         
         let rec interpretImpl' loopAction = 
             function 
@@ -33,17 +30,15 @@ module Interpreter =
             | PointerControl x -> setPointer x
             | IOWrite -> writeProc (readMem() |> char)
             | IORead -> writeMem (readProc() |> byte)
-            | Loop x ->
+            | Loop x -> 
                 while readMem() <> 0uy do
                     x |> List.iter loopAction
-
-        let rec interpretImpl x =
+        
+        let rec interpretImpl x = 
             instructionsRun <- instructionsRun + 1
             interpretImpl' interpretImpl x
-            
         
         program |> List.iter interpretImpl
-
         instructionsRun
     
     let interpretDelegate memSize (readProc : Func<char>) 
@@ -71,4 +66,19 @@ module Interpreter =
             let writer = new StringWriter()
             let! ic = interpretEx memSize reader writer program
             return writer.ToString(), ic
+        }
+    
+    let interpretExTee memSize reader (writer : TextWriter) program = 
+        trial { 
+            let mutable strOut = ""
+            
+            let newWriter = 
+                { new TextWriter() with
+                      member x.Close() = writer.Close()
+                      member x.Encoding = Encoding.ASCII
+                      member x.Write(y : char) = 
+                          strOut <- strOut + string y
+                          writer.Write(y) }
+            let! ic = interpretEx memSize reader newWriter program
+            return strOut, ic
         }

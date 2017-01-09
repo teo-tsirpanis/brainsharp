@@ -16,92 +16,93 @@ open System.IO
 open System.Reflection
 open System.Text
 
-module Bsc =
+module Bsc = 
     [<Literal>]
     let DisplayExpectenFoundTreshold = 200
-
+    
     let parser = ArgumentParser.Create<_>()
     let getArgsParser argv = parser.Parse argv |> ok
-
-    let doRun (source, input, output : TextWriter, expected, memSize, doProfile,
-               doOptimize) =
-        trial {
+    
+    let doRun (source, input, output : TextWriter, expected, memSize, doProfile, 
+               doOptimize) = 
+        trial { 
             use input = input
             use output = output
             let! theCode = parseFile source
                            |> lift makeCodeTree
                            |> lift (if doOptimize then optimize
                                     else id)
-            let stringOut = new StringWriter()            
             let sw = new Stopwatch()
             sw.Start()
-            let! instructionsRun = interpretEx memSize input stringOut theCode
+            let! stringOut, instructionsRun = interpretExTee memSize input 
+                                                  output theCode
             sw.Stop()
             do! (match doProfile with
-                 | true ->
+                 | true -> 
                      (sw.Elapsed, instructionsRun)
                      |> ProfilingResults
                      |> warn
                      <| ()
                  | false -> ok())
-            let stringOut = stringOut.ToString()
-            output.Write(stringOut)
             do! (match expected with
-                 | Some x ->
+                 | Some x -> 
                      if x <> stringOut then fail (TestFailure(x, stringOut))
                      else ok()
                  | None -> ok())
             return ()
         }
-
-    let splitArgs =
-        function
+    
+    let splitArgs = 
+        function 
         | RunArgs(a, b, c, d, e, f, g) -> doRun (a, b, c, d, e, f, g)
         | NoArgs -> ok()
-
-    let getMessage =
-        function
-        | ProfilingResults (time, instructionsRun) -> sprintf "Execution time (H:M:S:MS): %i:%i:%i:%i \nTotal instructions run: %i"
-                                                        time.Hours time.Minutes time.Seconds time.Milliseconds instructionsRun
-        | FileExist x ->
+    
+    let getMessage = 
+        function 
+        | ProfilingResults(time, instructionsRun) -> 
+            sprintf 
+                "Execution time (H:M:S:MS): %i:%i:%i:%i \nTotal instructions run: %i" 
+                time.Hours time.Minutes time.Seconds time.Milliseconds 
+                instructionsRun
+        | FileExist x -> 
             sprintf "File %s already exists. It will be overwritten." x
         | FileNotExist x -> sprintf "File %s does not exist." x
         | ParseError(x, _) -> x
-        | ShowVersion ->
+        | ShowVersion -> 
             AssemblyVersionInformation.AssemblyMetadata_Version_Message
-        | TestFailure(expected, found) ->
-            if expected.Length + found.Length < DisplayExpectenFoundTreshold * 2 then
-                sprintf
-                    "Program output is expected to be\n\t%s\n but it was \n\t%s"
+        | TestFailure(expected, found) -> 
+            if expected.Length + found.Length < DisplayExpectenFoundTreshold * 2 then 
+                sprintf 
+                    "Program output is expected to be\n\t%s\n but it was \n\t%s" 
                     expected found
-            else
+            else 
                 "Program output is different than the expected, but it is not shown, because of its size."
         | UnexpectedEndOfInput -> "Unexpected end of input."
-
+    
     [<EntryPoint>]
-    let main argv =
-        try
-            let doIt argv =
+    let main argv = 
+        try 
+            let doIt argv = 
                 argv
                 |> getArgsParser
                 >>= parseArguments
                 >>= splitArgs
             match doIt argv with
-            | Ok(_, msgs) ->
+            | Ok(_, msgs) -> 
                 eprintfn ""
                 msgs |> List.iter (getMessage >> eprintfn "%s")
                 eprintfn "Success"
                 0
-            | Bad msgs ->
+            | Bad msgs -> 
                 eprintfn ""
                 eprintfn "Errors:"
                 msgs |> List.iter (getMessage >> eprintfn "%s")
                 1
-        with e ->
+        with e -> 
             match e with
-            | :? ArguParseException ->
+            | :? ArguParseException -> 
                 eprintfn "%s" e.Message
                 0
-            | _ ->
+            | _ -> 
                 eprintfn "%O" e
                 1

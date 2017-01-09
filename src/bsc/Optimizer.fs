@@ -34,14 +34,21 @@ module Optimizer =
                    |> byte
                    |> MemoryControl
                    |> List.singleton
-               | [Loop x] -> x |> optimizeRLE |> Loop |> List.singleton
+               | [ Loop x ] -> 
+                   x
+                   |> optimizeRLE
+                   |> Loop
+                   |> List.singleton
                | x -> x)
     
     let rec optimizeClearLoops program = 
         program |> List.map (function 
                        | Loop([ MemoryControl x ]) when x = 1uy || x = 255uy -> 
                            MemorySet 0uy
-                       | Loop x -> x |> optimizeClearLoops |> Loop
+                       | Loop x -> 
+                           x
+                           |> optimizeClearLoops
+                           |> Loop
                        | x -> x)
     
     let optimize program = 

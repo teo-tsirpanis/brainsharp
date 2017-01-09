@@ -8,7 +8,7 @@ open Argu
 open System.IO
 
 type RunArguments = 
-    | [<MainCommand; ExactlyOnce; Last>] SourceFile of path : string
+    | [<MainCommand; ExactlyOnce>] SourceFile of path : string
     | [<Unique; AltCommandLine("-i")>] InputFile of path : string
     | [<Unique; AltCommandLine("-o")>] OutputFile of path : string
     | [<Unique; AltCommandLine("-e")>] ExpectedOutput of path : string
@@ -27,8 +27,7 @@ type RunArguments =
                 "The file that contains the expected output of the program. Used for testing purposes."
             | MemorySize _ -> 
                 "The size of the memory the program will have. Default is 65536 bytes. On negative numbers, the absolute value will be used."
-            | Profile -> 
-                "Enables performance measurement of the program."
+            | Profile -> "Enables performance measurement of the program."
             | Optimize -> "Enables optimization of the program."
 
 type CliArguments = 

@@ -18,7 +18,7 @@ module RLE =
                 let fhead = head |> f
                 
                 let newElement = 
-                    if optEqual fnone fhead then [head]
+                    if optEqual fnone fhead then [ head ]
                     else 
                         l
                         |> Seq.takeWhile (f >> ((=) fhead))
