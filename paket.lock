@@ -1,10 +1,10 @@
 NUGET
-  remote: https://www.nuget.org/api/v2
-    Argu (3.4)
+  remote: https://api.nuget.org/v3/index.json
+    Argu (3.7)
       FSharp.Core (>= 4.0.1.7-alpha) - framework: >= net463, >= netstandard16
       NETStandard.Library (>= 1.6) - framework: >= net463, >= netstandard16
       System.Xml.XDocument (>= 4.0.11) - framework: >= net463, >= netstandard16
-    FAKE (4.46)
+    FAKE (4.48)
     Fantomas (2.4)
       FSharp.Compiler.Service (>= 8.0)
     FParsec (1.0.2)
@@ -130,7 +130,7 @@ NUGET
       System.Runtime.Extensions (>= 4.3) - framework: dnxcore50, >= netstandard13
       System.Threading (>= 4.3) - framework: dnxcore50, >= netstandard13
       System.Threading.Tasks (>= 4.3) - framework: dnxcore50, netstandard11, >= netstandard13
-    System.Collections.Immutable (1.3)
+    System.Collections.Immutable (1.3.1)
       System.Collections (>= 4.3) - framework: >= netstandard10
       System.Diagnostics.Debug (>= 4.3) - framework: >= netstandard10
       System.Globalization (>= 4.3) - framework: >= netstandard10
@@ -345,10 +345,10 @@ NUGET
       Microsoft.NETCore.Targets (>= 1.1) - framework: dnxcore50, >= netstandard10
       System.Reflection (>= 4.3) - framework: dnxcore50, >= netstandard10
       System.Runtime (>= 4.3) - framework: dnxcore50, >= netstandard10
-    System.Reflection.Metadata (1.4.1)
+    System.Reflection.Metadata (1.4.2)
       System.Collections (>= 4.3) - framework: >= netstandard11
       System.Collections.Immutable (>= 1.1.37) - framework: portable-net45+win8
-      System.Collections.Immutable (>= 1.3) - framework: >= net45, >= netstandard11, monoandroid, monotouch, xamarinios, xamarinmac, winv4.5, wpav8.1
+      System.Collections.Immutable (>= 1.3.1) - framework: >= net45, >= netstandard11, monoandroid, monotouch, xamarinios, xamarinmac, winv4.5, wpav8.1
       System.Diagnostics.Debug (>= 4.3) - framework: >= netstandard11
       System.IO (>= 4.3) - framework: >= netstandard11
       System.IO.Compression (>= 4.3) - framework: >= netstandard11

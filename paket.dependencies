@@ -1,7 +1,6 @@
-source https://www.nuget.org/api/v2
+source https://api.nuget.org/v3/index.json
 nuget Argu
 nuget FAKE
 nuget Fantomas
 nuget FParsec
-nuget FSharp.Core
 github fsprojects/Chessie src/Chessie/ErrorHandling.fs
