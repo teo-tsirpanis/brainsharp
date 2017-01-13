@@ -50,6 +50,8 @@ module Optimizer =
                            |> optimizeClearLoops
                            |> Loop
                        | x -> x)
+
+    let optimizeLeadingLoop program = program |> List.skipWhile (function | Loop _ -> true | _ -> false)
     
     let optimize program = 
-        program |> overKill (optimizeRLE >> optimizeClearLoops)
+        program |> overKill (optimizeRLE >> optimizeClearLoops >> optimizeLeadingLoop)

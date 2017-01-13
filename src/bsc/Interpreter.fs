@@ -13,7 +13,7 @@ module Interpreter =
     let interpret memSize (readProc : unit -> char) writeProc program = 
         let memory = Array.replicate (memSize) 0uy
         let mutable pointer = 0
-        let mutable instructionsRun = 0
+        let mutable instructionsRun = 0UL
         let readMem() = memory.[pointer]
         let writeMem ofs = memory.[pointer] <- memory.[pointer] + ofs
         let setMem x = memory.[pointer] <- x
@@ -35,7 +35,7 @@ module Interpreter =
                     x |> List.iter loopAction
         
         let rec interpretImpl x = 
-            instructionsRun <- instructionsRun + 1
+            instructionsRun <- instructionsRun + 1UL
             interpretImpl' interpretImpl x
         
         program |> List.iter interpretImpl

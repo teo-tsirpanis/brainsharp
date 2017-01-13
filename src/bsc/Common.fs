@@ -8,7 +8,7 @@ open FParsec
 open System
 
 type BFError = 
-    | ProfilingResults of TimeSpan * int
+    | ProfilingResults of TimeSpan * uint64
     | FileExist of string
     | FileNotExist of string
     | ParseError of string * ParserError
