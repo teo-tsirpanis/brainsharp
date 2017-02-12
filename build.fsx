@@ -27,9 +27,9 @@ let AppVersionMessage =
     + "\nCheck out new releases on https://github.com/teo-tsirpanis/brainsharp/releases"
 
 // version info
-
 [<Literal>]
 let BuildVersion = "1.2"
+
 let version = 
     match buildServer with
     | AppVeyor -> AppVeyorEnvironment.BuildVersion
@@ -53,9 +53,7 @@ let DoBuild f =
     let buildDate = DateTime.UtcNow.ToString()
     CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" 
         [ Attribute.Title "Brainsharp"
-          
-          Attribute.Description 
-              "A Brainfuck toolchain written in F#."
+          Attribute.Description "A Brainfuck toolchain written in F#."
           
           Attribute.Copyright 
               "Licensed under the MIT License. Created by Theodore Tsirpanis."
@@ -64,10 +62,8 @@ let DoBuild f =
           
           Attribute.Metadata
               ("Version Message", 
-               String.Format
-                   (AppVersionMessage, version, gitHash, buildDate))
-          Attribute.Version version 
-          ]
+               String.Format(AppVersionMessage, version, gitHash, buildDate))
+          Attribute.Version version ]
     f buildDir "Build" appReferences |> Log "AppBuild-Output: "
 
 Target "Debug" (fun _ -> DoBuild MSBuildDebug)

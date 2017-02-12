@@ -15,8 +15,8 @@ module CodeEmitter =
     
     let emitLoop loopAction x = 
         sprintf "while (mem[p] != 0) {\n%s}" (x
-                                            |> List.map loopAction
-                                            |> String.concat "")
+                                              |> List.map loopAction
+                                              |> String.concat "")
     
     let rec getEmitter indentLevel x = 
         let getEmitterImpl = 
