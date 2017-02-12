@@ -16,8 +16,6 @@ open System.Diagnostics
 open System.IO
 
 module Bsc = 
-    [<Literal>]
-    let DisplayExpectenFoundTreshold = 200
     
     let parser = ArgumentParser.Create<_>()
     let getArgsParser argv = parser.Parse argv |> ok
@@ -42,7 +40,7 @@ module Bsc =
                                     else id)
             let sw = new Stopwatch()
             sw.Start()
-            let! stringOut, instructionsRun = interpretExTee memSize input 
+            let stringOut, instructionsRun = interpretExTee memSize input 
                                                   output theCode
             sw.Stop()
             do! (match doProfile with
@@ -65,29 +63,7 @@ module Bsc =
         | BuildArgs(a, b, c, d) -> doBuild (a, b, c, d)
         | RunArgs(a, b, c, d, e, f, g) -> doRun (a, b, c, d, e, f, g)
         | NoArgs -> ok()
-    
-    let getMessage = 
-        function 
-        | ProfilingResults(time, instructionsRun) -> 
-            sprintf 
-                "Execution time (H:M:S:MS): %i:%i:%i:%i \nTotal instructions run: %i" 
-                time.Hours time.Minutes time.Seconds time.Milliseconds 
-                instructionsRun
-        | FileExist x -> 
-            sprintf "File %s already exists. It will be overwritten." x
-        | FileNotExist x -> sprintf "File %s does not exist." x
-        | ParseError(x, _) -> x
-        | ShowVersion -> 
-            AssemblyVersionInformation.AssemblyMetadata_Version_Message
-        | TestFailure(expected, found) -> 
-            if expected.Length + found.Length < DisplayExpectenFoundTreshold * 2 then 
-                sprintf 
-                    "Program output is expected to be\n\t%s\n but it was \n\t%s" 
-                    expected found
-            else 
-                "Program output is different than the expected, but it is not shown, because of its size."
-        | UnexpectedEndOfInput -> "Unexpected end of input."
-    
+        
     [<EntryPoint>]
     let main argv = 
         try 
@@ -99,13 +75,13 @@ module Bsc =
             match doIt argv with
             | Ok(_, msgs) -> 
                 eprintfn ""
-                msgs |> List.iter (getMessage >> eprintfn "%s")
+                msgs |> List.iter (eprintfn "%O")
                 eprintfn "Success"
                 0
             | Bad msgs -> 
                 eprintfn ""
                 eprintfn "Errors:"
-                msgs |> List.iter (getMessage >> eprintfn "%s")
+                msgs |> List.iter (eprintfn "%O")
                 1
         with e -> 
             match e with
