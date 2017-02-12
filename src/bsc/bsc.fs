@@ -8,13 +8,12 @@ open Argu
 open BFCode
 open BFParser
 open Chessie.ErrorHandling
+open CodeEmitter
 open Interpreter
 open Optimizer
 open System
 open System.Diagnostics
 open System.IO
-open System.Reflection
-open System.Text
 
 module Bsc = 
     [<Literal>]
@@ -22,6 +21,15 @@ module Bsc =
     
     let parser = ArgumentParser.Create<_>()
     let getArgsParser argv = parser.Parse argv |> ok
+    
+    let doBuild (source, outputFile, memSize, doOptimize) = 
+        trial { 
+            let! theCode = parseFile source |> lift (makeCodeTree >> (if doOptimize then 
+                                                                          optimize
+                                                                      else id))
+            let outputSource = emitProgram memSize theCode
+            File.WriteAllText(outputFile, outputSource)
+        }
     
     let doRun (source, input, output : TextWriter, expected, memSize, doProfile, 
                doOptimize) = 
@@ -54,6 +62,7 @@ module Bsc =
     
     let splitArgs = 
         function 
+        | BuildArgs(a, b, c, d) -> doBuild (a, b, c, d)
         | RunArgs(a, b, c, d, e, f, g) -> doRun (a, b, c, d, e, f, g)
         | NoArgs -> ok()
     

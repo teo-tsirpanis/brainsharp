@@ -57,7 +57,7 @@
     <Compile Include="Optimizer.fs" />
     <Compile Include="Interpreter.fs" />
     <Compile Include="Arguments.fs" />
-    <Compile Include="ILEmitter.fs" />
+    <Compile Include="CodeEmitter.fs" />
     <Compile Include="bsc.fs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
