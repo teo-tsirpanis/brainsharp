@@ -5,13 +5,16 @@
 namespace Brainsharp
 
 open BFCode
+open System
 
 module CodeEmitter = 
+    
+    let stringReplace oldText (newText: string) (s: string) = s.Replace (oldText, newText)
     let emitMemoryControl = sprintf "mem[p] += %d;"
     let emitMemorySet = sprintf "mem[p] = %u;"
     let emitPointerControl = sprintf "SetPointer (%d);"
-    let emitIOWrite = "Console.Write((char) mem[p]);"
-    let emitIORead = "c = Comsole.Read(); if (c != -1) {mem[x] = c;}"
+    let emitIOWrite = "sb.Append((char) mem[p]);"
+    let emitIORead = "c = readProc(); if (c != -1) {mem[x] = c;}"
     
     let emitLoop loopAction x = 
         sprintf "while (mem[p] != 0) {\n%s}" (x
@@ -35,22 +38,14 @@ module CodeEmitter =
                    <| " "
         sprintf "%s%s\n" tabs (getEmitterImpl x)
     
+    let emitPayload program =
+        let theProgram = program |> List.map (fun x -> (String.replicate 4 " ") + (getEmitter 1 x)) |> String.concat ""
+        let theTemplate = Resources.bsc.MethodTemplate
+        stringReplace "@ThePayload" theProgram |> overKill <| theTemplate
+
     let emitProgram memSize program = 
-        [ "using System;"
-          "public static class Program"
-          "{"
-          sprintf "static byte[] mem = new byte[%u];" memSize
-          "static int p = 0;"
-          "static int c = 0;"
-          
-          sprintf 
-              "public static void SetPointer (int ofs) {var temp = (p + ofs) %% %u; if (temp < 0) {p = %d - temp;} else {p = temp;}}" 
-              memSize memSize
-          "public static void Main()"
-          "{"
-          program
-          |> List.map (getEmitter 1)
-          |> String.concat ""
-          "}"
-          "}" ]
-        |> String.concat "\n"
+        let thePayload = emitPayload program
+        let theTemplate = Resources.bsc.CompiledProgram
+        let replaceMethod = [   (stringReplace "@MemorySize" (sprintf "%u" memSize))
+                                (stringReplace "@TheMethod" thePayload)] |> List.fold (>>) id
+        replaceMethod |> overKill <| theTemplate

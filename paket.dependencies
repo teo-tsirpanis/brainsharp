@@ -3,4 +3,5 @@ nuget Argu
 nuget FAKE
 nuget Fantomas
 nuget FParsec
+nuget FSharp.Configuration
 github fsprojects/Chessie src/Chessie/ErrorHandling.fs
