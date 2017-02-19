@@ -16,7 +16,6 @@ open System.Diagnostics
 open System.IO
 
 module Bsc = 
-    
     let parser = ArgumentParser.Create<_>()
     let getArgsParser argv = parser.Parse argv |> ok
     
@@ -40,8 +39,8 @@ module Bsc =
                                     else id)
             let sw = new Stopwatch()
             sw.Start()
-            let stringOut, instructionsRun = interpretExTee memSize input 
-                                                  output theCode
+            let stringOut, instructionsRun = 
+                interpretExTee memSize input output theCode
             sw.Stop()
             do! (match doProfile with
                  | true -> 
@@ -63,7 +62,7 @@ module Bsc =
         | BuildArgs(a, b, c, d) -> doBuild (a, b, c, d)
         | RunArgs(a, b, c, d, e, f, g) -> doRun (a, b, c, d, e, f, g)
         | NoArgs -> ok()
-        
+    
     [<EntryPoint>]
     let main argv = 
         try 

@@ -8,7 +8,7 @@ open FParsec
 open FSharp.Configuration
 open System
 
-type Resources = ResXProvider<file="bsc.resx">
+type Resources = ResXProvider< file="bsc.resx" >
 
 type BFError = 
     | ProfilingResults of TimeSpan * uint64
@@ -18,7 +18,7 @@ type BFError =
     | ShowVersion
     | TestFailure of excpected : string * found : string
     override x.ToString() = 
-        match x with 
+        match x with
         | ProfilingResults(time, instructionsRun) -> 
             sprintf 
                 "Execution time (H:M:S:MS): %i:%i:%i:%i \nTotal instructions run: %i" 
@@ -55,3 +55,15 @@ module Common =
         let state' = f state
         if state = state' then state
         else overKill f state'
+
+module String = 
+    let replace oldText (newText : string) (s : string) = 
+        s.Replace(oldText, newText)
+    
+    let replaceMany isRecursive patterns = 
+        patterns
+        |> List.map ((<||) replace)
+        |> List.fold (>>) id
+        |> (fun f -> 
+        if isRecursive then overKill f
+        else f)

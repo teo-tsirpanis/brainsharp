@@ -29,9 +29,10 @@ module Interpreter =
             | MemorySet x -> setMem x
             | PointerControl x -> setPointer x
             | IOWrite -> writeProc (readMem() |> char)
-            | IORead -> match readProc() with
-                        | Some x -> writeMem (x |> byte)
-                        | None -> ()
+            | IORead -> 
+                match readProc() with
+                | Some x -> writeMem (x |> byte)
+                | None -> ()
             | Loop x -> 
                 while readMem() <> 0uy do
                     x |> List.iter loopAction
@@ -42,15 +43,18 @@ module Interpreter =
         
         program |> List.iter interpretImpl
         instructionsRun
-        
+    
     exception private EofException of unit
     
     let interpretEx memSize (reader : TextReader) (writer : TextWriter) program = 
         let readProc() = 
             match reader.Read() with
             | -1 -> None
-            | x -> x |> char |> Some
-            
+            | x -> 
+                x
+                |> char
+                |> Some
+        
         let writeProc (c : char) = writer.Write c
         interpret memSize readProc writeProc program
     
@@ -62,13 +66,14 @@ module Interpreter =
     
     let interpretExTee memSize reader (writer : TextWriter) program = 
         let mutable strOut = ""
-            
+        
         let newWriter = 
             { new TextWriter() with
-                member x.Close() = writer.Close()
-                member x.Encoding = Encoding.ASCII
-                member x.Write(y : char) = 
-                        strOut <- strOut + string y
-                        writer.Write(y) }
+                  member x.Close() = writer.Close()
+                  member x.Encoding = Encoding.ASCII
+                  member x.Write(y : char) = 
+                      strOut <- strOut + string y
+                      writer.Write(y) }
+        
         let ic = interpretEx memSize reader newWriter program
         strOut, ic

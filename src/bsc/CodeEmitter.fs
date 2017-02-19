@@ -8,8 +8,6 @@ open BFCode
 open System
 
 module CodeEmitter = 
-    
-    let stringReplace oldText (newText: string) (s: string) = s.Replace (oldText, newText)
     let emitMemoryControl = sprintf "mem[p] += %d;"
     let emitMemorySet = sprintf "mem[p] = %u;"
     let emitPointerControl = sprintf "SetPointer (%d);"
@@ -38,14 +36,19 @@ module CodeEmitter =
                    <| " "
         sprintf "%s%s\n" tabs (getEmitterImpl x)
     
-    let emitPayload program =
-        let theProgram = program |> List.map (fun x -> (String.replicate 4 " ") + (getEmitter 1 x)) |> String.concat ""
+    let emitPayload program = 
+        let theProgram = 
+            program
+            |> List.map (fun x -> (String.replicate 4 " ") + (getEmitter 1 x))
+            |> String.concat ""
+        
         let theTemplate = Resources.bsc.MethodTemplate
-        stringReplace "@ThePayload" theProgram |> overKill <| theTemplate
-
+        String.replace "@ThePayload" theProgram <| theTemplate
+    
     let emitProgram memSize program = 
         let thePayload = emitPayload program
         let theTemplate = Resources.bsc.CompiledProgram
-        let replaceMethod = [   (stringReplace "@MemorySize" (sprintf "%u" memSize))
-                                (stringReplace "@TheMethod" thePayload)] |> List.fold (>>) id
-        replaceMethod |> overKill <| theTemplate
+        [ "@MemorySize", sprintf "%u" memSize
+          "@TheMethod", thePayload ]
+        |> String.replaceMany true
+        <| theTemplate
