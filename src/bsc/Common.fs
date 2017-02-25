@@ -5,10 +5,7 @@
 namespace Brainsharp
 
 open FParsec
-open FSharp.Configuration
 open System
-
-type Resources = ResXProvider< file="bsc.resx" >
 
 type BFError = 
     | ProfilingResults of TimeSpan * uint64

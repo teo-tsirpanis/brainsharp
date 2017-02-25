@@ -44,26 +44,34 @@ let fantomasConfig =
 // Filesets
 let appReferences = !!"/**/*.csproj" ++ "/**/*.fsproj"
 let sourceFiles = !!"src/**/*.fs" ++ "src/**/*.fsx" ++ "build.fsx"
+let resources = 
+    !!"src/bsc/resources/*.cs"
+    |> List.ofSeq
+    |> List.map ((fun s -> Path.GetFileNameWithoutExtension(s), File.ReadAllText s) >> Attribute.Metadata) 
+
+let attributes = 
+    let gitHash = Information.getCurrentHash()
+    let buildDate = DateTime.UtcNow.ToString()
+    [ Attribute.Title "Brainsharp"
+      Attribute.Description "A Brainfuck toolchain written in F#."
+      
+      Attribute.Copyright 
+          "Licensed under the MIT License. Created by Theodore Tsirpanis."
+      Attribute.Metadata("Git Hash", gitHash)
+      Attribute.Metadata("Build Date", buildDate)
+      
+      Attribute.Metadata
+          ("Version Message", 
+           String.Format(AppVersionMessage, version, gitHash, buildDate))
+      Attribute.Version version
+      //Attribute.Metadata ("MethodTemplate", File.ReadAllText "src/resources/MethodTemplate.cs")
+    ] @ resources 
 
 // Targets
 Target "Clean" (fun _ -> CleanDir buildDir)
 
 let DoBuild f = 
-    let gitHash = Information.getCurrentHash()
-    let buildDate = DateTime.UtcNow.ToString()
-    CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" 
-        [ Attribute.Title "Brainsharp"
-          Attribute.Description "A Brainfuck toolchain written in F#."
-          
-          Attribute.Copyright 
-              "Licensed under the MIT License. Created by Theodore Tsirpanis."
-          Attribute.Metadata("Git Hash", gitHash)
-          Attribute.Metadata("Build Date", buildDate)
-          
-          Attribute.Metadata
-              ("Version Message", 
-               String.Format(AppVersionMessage, version, gitHash, buildDate))
-          Attribute.Version version ]
+    CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" attributes
     f buildDir "Build" appReferences |> Log "AppBuild-Output: "
 
 Target "Debug" (fun _ -> DoBuild MSBuildDebug)
