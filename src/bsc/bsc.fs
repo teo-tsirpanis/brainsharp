@@ -19,13 +19,12 @@ module Bsc =
     let parser = ArgumentParser.Create<_>()
     let getArgsParser argv = parser.Parse argv |> ok
     
-    let doBuild (source, outputFile, memSize, doOptimize) = 
+    let doBuild (source, outputFile, assemblyName, memSize, doOptimize) = 
         trial { 
             let! theCode = parseFile source |> lift (makeCodeTree >> (if doOptimize then 
                                                                           optimize
                                                                       else id))
-            let outputSource = emitProgram memSize theCode
-            File.WriteAllText(outputFile, outputSource)
+            do! Compiler.compileToFile assemblyName outputFile memSize theCode
         }
     
     let doRun (source, input, output : TextWriter, expected, memSize, doProfile, 
@@ -37,7 +36,7 @@ module Bsc =
                            |> lift makeCodeTree
                            |> lift (if doOptimize then optimize
                                     else id)
-            let sw = new Stopwatch()
+            let sw = Stopwatch()
             sw.Start()
             let stringOut, instructionsRun = 
                 interpretExTee memSize input output theCode
@@ -59,7 +58,7 @@ module Bsc =
     
     let splitArgs = 
         function 
-        | BuildArgs(a, b, c, d) -> doBuild (a, b, c, d)
+        | BuildArgs(a, b, c, d, e) -> doBuild (a, b, c, d, e)
         | RunArgs(a, b, c, d, e, f, g) -> doRun (a, b, c, d, e, f, g)
         | NoArgs -> ok()
     

@@ -27,9 +27,20 @@ module Compiler =
             let compilation = 
                 CSharpCompilation.Create(name, trees, references, options)
             let result = destination |> compilation.Emit
+            
             let diagnostics = 
-                result.Diagnostics 
-                |> Seq.map (fun d -> d.GetMessage() |> CompilationMessage)
+                result.Diagnostics |> Seq.map (fun d -> 
+                                          let message = d.GetMessage()
+                                          match d.Severity with
+                                          | DiagnosticSeverity.Error -> 
+                                              message
+                                              |> CompilationError
+                                              |> fail
+                                          | _ -> 
+                                              message
+                                              |> CompilationMessage
+                                              |> warn
+                                              <| ())
             for d in diagnostics do
-                do! warn d ()
+                do! d
         }

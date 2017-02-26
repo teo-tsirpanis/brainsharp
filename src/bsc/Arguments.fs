@@ -10,17 +10,21 @@ open System.IO
 type BuildArguments = 
     | [<MainCommand; ExactlyOnce>] SourceFile of path : string
     | [<ExactlyOnce; AltCommandLine("-o")>] OutputFile of path : string
+    | [<Unique; AltCommandLine("-n")>] AssemblyName of string
     | [<Unique>] MemorySize of bytes : int
-    | Optimize
+    | [<Unique>] Optimize of bool
     interface IArgParserTemplate with
         member s.Usage = 
             match s with
             | SourceFile _ -> 
                 "The file containing the source code to be compiled."
-            | OutputFile _ -> "The file to contain the C# source code."
+            | OutputFile _ -> "The file to contain the produced program."
+            | AssemblyName _ -> 
+                "The name of the resulting assembly. Defaults to the name of the source file."
             | MemorySize _ -> 
-                "The size of the memory the program will have. Default is 65536 bytes. On negative numbers, the absolute value will be used."
-            | Optimize -> "Enables optimization of the program."
+                "The size of the memory the program will have. Defaults to 65536 bytes. On negative numbers, the absolute value will be used."
+            | Optimize _ -> 
+                "Controls optimization of the program. Defaults to true."
 
 type RunArguments = 
     | [<MainCommand; ExactlyOnce>] SourceFile of path : string
@@ -29,7 +33,7 @@ type RunArguments =
     | [<Unique; AltCommandLine("-e")>] ExpectedOutput of path : string
     | [<Unique>] MemorySize of bytes : int
     | Profile
-    | Optimize
+    | [<Unique>] Optimize of bool
     interface IArgParserTemplate with
         member s.Usage = 
             match s with
@@ -41,9 +45,10 @@ type RunArguments =
             | ExpectedOutput _ -> 
                 "The file that contains the expected output of the program. Used for testing purposes."
             | MemorySize _ -> 
-                "The size of the memory the program will have. Default is 65536 bytes. On negative numbers, the absolute value will be used."
+                "The size of the memory the program will have. Defaults to 65536 bytes. On negative numbers, the absolute value will be used."
             | Profile -> "Enables performance measurement of the program."
-            | Optimize -> "Enables optimization of the program."
+            | Optimize _ -> 
+                "Controls optimization of the program. Defaults to true."
 
 type CliArguments = 
     | [<CliPrefix(CliPrefix.Dash)>] V
@@ -53,11 +58,12 @@ type CliArguments =
         member s.Usage = 
             match s with
             | V -> "Displays version."
-            | Build _ -> "Converts a brainfuck program to C#."
+            | Build _ -> 
+                "Compiles a brainfuck program to a .NET executable file."
             | Run _ -> "Runs a brainfuck program."
 
 type ResultArgs = 
-    | BuildArgs of sourceFile : string * outputFile : string * memorySize : int * doOptimize : bool
+    | BuildArgs of sourceFile : string * outputFile : string * assemblyName : string * memorySize : int * doOptimize : bool
     | RunArgs of sourceFile : string * input : TextReader * output : TextWriter * expectedOutput : string option * memorySize : int * doProfile : bool * doOptimize : bool
     | NoArgs
 
@@ -82,13 +88,19 @@ module Arguments =
                                                       if File.Exists s |> not then 
                                                           ok s
                                                       else warn (FileExist s) s)
+            let assemblyName = 
+                a.GetResult
+                    (<@ AssemblyName @>, 
+                     Path.GetFileNameWithoutExtension outputFile)
+            
             let memSize = 
                 match a.TryGetResult(<@ BuildArguments.MemorySize @>) with
                 | None | Some 0 -> DefaultMemorySize |> int
                 | Some x -> x |> abs
             
-            let doOptimize = a.Contains(<@ BuildArguments.Optimize @>)
-            return (source, outputFile, memSize, doOptimize) |> BuildArgs
+            let doOptimize = a.GetResult(<@ BuildArguments.Optimize @>, true)
+            return (source, outputFile, assemblyName, memSize, doOptimize) 
+                   |> BuildArgs
         }
     
     let parseRun (a : ParseResults<RunArguments>) = 
@@ -128,7 +140,7 @@ module Arguments =
                 | Some x -> x |> abs
             
             let doProfile = a.Contains(<@ Profile @>)
-            let doOptimize = a.Contains(<@ Optimize @>)
+            let doOptimize = a.GetResult(<@ Optimize @>, true)
             return (source, input, output, expected, memSize, doProfile, 
                     doOptimize) |> RunArgs
         }
