@@ -1,6 +1,4 @@
-public static string DoIt (Func<int> readProc)
+public static void DoIt (Func<int> readProc, Action<char> writeProc)
 {
-    var sb = new StringBuilder();
     @ThePayload
-    return sb.ToString();
 }

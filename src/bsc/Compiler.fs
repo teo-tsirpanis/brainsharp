@@ -29,18 +29,20 @@ module Compiler =
             let result = destination |> compilation.Emit
             
             let diagnostics = 
-                result.Diagnostics |> Seq.map (fun d -> 
-                                          let message = d.GetMessage()
-                                          match d.Severity with
-                                          | DiagnosticSeverity.Error -> 
-                                              message
-                                              |> CompilationError
-                                              |> fail
-                                          | _ -> 
-                                              message
-                                              |> CompilationMessage
-                                              |> warn
-                                              <| ())
+                result.Diagnostics
+                |> Seq.filter (fun d -> d.Severity <> DiagnosticSeverity.Hidden)
+                |> Seq.map (fun d -> 
+                       let message = d.ToString()
+                       match d.Severity with
+                       | DiagnosticSeverity.Error -> 
+                           message
+                           |> CompilationError
+                           |> fail
+                       | _ -> 
+                           message
+                           |> CompilationMessage
+                           |> warn
+                           <| ())
             for d in diagnostics do
                 do! d
         }

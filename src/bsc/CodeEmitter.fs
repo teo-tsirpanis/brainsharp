@@ -11,7 +11,7 @@ module CodeEmitter =
     let emitMemoryControl = sprintf "mem[p] += %d;"
     let emitMemorySet = sprintf "mem[p] = %u;"
     let emitPointerControl = sprintf "SetPointer (%d);"
-    let emitIOWrite = "sb.Append((char) mem[p]);"
+    let emitIOWrite = "writeProc((char) mem[p]);"
     let emitIORead = "c = readProc(); if (c != -1) {mem[x] = c;}"
     
     let emitLoop loopAction x = 

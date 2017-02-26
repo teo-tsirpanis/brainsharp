@@ -22,7 +22,7 @@ public static class MyBrainsharpProgram
     public static void Main()
     {
         Func<int> readAction = () => Console.Read();
-        var output = DoIt(readAction);
-        Console.Write(output);
+        Action<char> writeAction = c => Console.Write(c);
+        DoIt(readAction, writeAction);
     }
 }
