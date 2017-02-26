@@ -44,10 +44,13 @@ let fantomasConfig =
 // Filesets
 let appReferences = !!"/**/*.csproj" ++ "/**/*.fsproj"
 let sourceFiles = !!"src/**/*.fs" ++ "src/**/*.fsx" ++ "build.fsx"
+
 let resources = 
     !!"src/bsc/resources/*.cs"
     |> List.ofSeq
-    |> List.map ((fun s -> Path.GetFileNameWithoutExtension(s), File.ReadAllText s) >> Attribute.Metadata) 
+    |> List.map 
+           ((fun s -> Path.GetFileNameWithoutExtension(s), File.ReadAllText s) 
+            >> Attribute.Metadata)
 
 let attributes = 
     let gitHash = Information.getCurrentHash()
@@ -63,9 +66,8 @@ let attributes =
       Attribute.Metadata
           ("Version Message", 
            String.Format(AppVersionMessage, version, gitHash, buildDate))
-      Attribute.Version version
-      //Attribute.Metadata ("MethodTemplate", File.ReadAllText "src/resources/MethodTemplate.cs")
-    ] @ resources 
+      Attribute.Version version ]
+    @ resources
 
 // Targets
 Target "Clean" (fun _ -> CleanDir buildDir)

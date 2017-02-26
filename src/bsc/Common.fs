@@ -8,6 +8,7 @@ open FParsec
 open System
 
 type BFError = 
+    | CompilationMessage of string
     | ProfilingResults of TimeSpan * uint64
     | FileExist of string
     | FileNotExist of string
@@ -16,6 +17,7 @@ type BFError =
     | TestFailure of excpected : string * found : string
     override x.ToString() = 
         match x with
+        | CompilationMessage x -> sprintf "Compilation: %s" x
         | ProfilingResults(time, instructionsRun) -> 
             sprintf 
                 "Execution time (H:M:S:MS): %i:%i:%i:%i \nTotal instructions run: %i" 
