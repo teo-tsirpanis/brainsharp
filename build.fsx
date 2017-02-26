@@ -28,7 +28,7 @@ let AppVersionMessage =
 
 // version info
 [<Literal>]
-let BuildVersion = "1.2"
+let BuildVersion = "1.3"
 
 let version = 
     match buildServer with

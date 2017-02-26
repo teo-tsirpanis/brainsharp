@@ -9,7 +9,7 @@ Brainsharp is a [brainfuck](https://en.wikipedia.org/wiki/Brainfuck) SDK written
 
 It aims to be the fastest way to run brainfuck programs.
 
-It has an ever-evolving interpreter with an optimizer and a native IL compiler to come.
+It has an interpreter, an optimizer and a .NET assembly compiler.
 
 ## Download
 
@@ -30,7 +30,7 @@ Just run `bsc --help` (or `mono bsc.exe --help` if you are on Linux) to learn it
 ## Status
 * Interpreter: _Complete_
 * Optimizer: _Complete. More optimizers are coming!_
-* Compiler: _Initial work started_
+* Compiler: _Complete_
 
 ## License
 Brainsharp is licensed under the
