@@ -86,4 +86,4 @@ Target "FormatCode" (fun _ ->
 "Clean" ?=> "Debug"
 "Clean" ?=> "Release"
 // start build
-RunTargetOrDefault "Debug"
+RunTargetOrDefault "Release"
