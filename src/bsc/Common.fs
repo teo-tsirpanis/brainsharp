@@ -6,6 +6,15 @@ namespace Brainsharp
 
 open FParsec
 open System
+open System.Reflection
+open System.Resources
+
+module Resources =
+    let private rm = ResourceManager("bsc", Assembly.GetExecutingAssembly())
+
+    let compiledProgram = rm.GetString "CompiledProgram"
+    
+    let methodTemplate = rm.GetString "MethodTemplate"
 
 type BFError = 
     | CompilationError of string

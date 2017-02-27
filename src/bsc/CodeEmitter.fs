@@ -42,14 +42,12 @@ module CodeEmitter =
             |> List.map (fun x -> (String.replicate 4 " ") + (getEmitter 1 x))
             |> String.concat ""
         
-        let theTemplate = 
-            System.AssemblyVersionInformation.AssemblyMetadata_MethodTemplate
+        let theTemplate = Resources.methodTemplate
         String.replace "@ThePayload" theProgram <| theTemplate
     
     let emitProgram memSize program = 
         let thePayload = emitPayload program
-        let theTemplate = 
-            System.AssemblyVersionInformation.AssemblyMetadata_CompiledProgram
+        let theTemplate = Resources.compiledProgram
         [ "@MemorySize", sprintf "%u" memSize
           "@TheMethod", thePayload ]
         |> String.replaceMany true

@@ -13,6 +13,7 @@ type BuildArguments =
     | [<Unique; AltCommandLine("-n")>] AssemblyName of string
     | [<Unique>] MemorySize of bytes : int
     | [<Unique>] Optimize of bool
+    | Profile
     interface IArgParserTemplate with
         member s.Usage = 
             match s with
@@ -25,6 +26,7 @@ type BuildArguments =
                 "The size of the memory the program will have. Defaults to 65536 bytes. On negative numbers, the absolute value will be used."
             | Optimize _ -> 
                 "Controls optimization of the program. Defaults to true."
+            | Profile -> "The generated program will display execution time in stderr."
 
 type RunArguments = 
     | [<MainCommand; ExactlyOnce>] SourceFile of path : string
@@ -63,7 +65,7 @@ type CliArguments =
             | Run _ -> "Runs a brainfuck program."
 
 type ResultArgs = 
-    | BuildArgs of sourceFile : string * outputFile : string * assemblyName : string * memorySize : int * doOptimize : bool
+    | BuildArgs of sourceFile : string * outputFile : string * assemblyName : string * memorySize : int * doOptimize : bool * doProfile: bool
     | RunArgs of sourceFile : string * input : TextReader * output : TextWriter * expectedOutput : string option * memorySize : int * doProfile : bool * doOptimize : bool
     | NoArgs
 
@@ -99,7 +101,8 @@ module Arguments =
                 | Some x -> x |> abs
             
             let doOptimize = a.GetResult(<@ BuildArguments.Optimize @>, true)
-            return (source, outputFile, assemblyName, memSize, doOptimize) 
+            let doProfile = a.Contains (<@ BuildArguments.Profile @>)
+            return (source, outputFile, assemblyName, memSize, doOptimize, doProfile) 
                    |> BuildArgs
         }
     

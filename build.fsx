@@ -67,7 +67,6 @@ let attributes =
           ("Version Message", 
            String.Format(AppVersionMessage, version, gitHash, buildDate))
       Attribute.Version version ]
-    @ resources
 
 // Targets
 Target "Clean" (fun _ -> CleanDir buildDir)
