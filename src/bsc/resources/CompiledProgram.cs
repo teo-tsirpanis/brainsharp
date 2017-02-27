@@ -28,7 +28,7 @@ public static class MyBrainsharpProgram
         DoIt(readAction, writeAction);
         stopwatch.Stop();
         #if PROFILE            
-            Console.Error.WriteLine($"Runtime: {stopwatch.Elapsed}")
+            Console.Error.WriteLine($"Execution time (H:M:S:MS): {stopwatch.Elapsed}");
         #endif
     }
 }
