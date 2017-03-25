@@ -10,6 +10,7 @@
 open Fake
 open Fake.AppVeyor
 open Fake.AssemblyInfoFile
+open Fake.DotNetCli
 open Fake.Git
 open Fantomas.FakeHelpers
 open Fantomas.FormatConfig
@@ -64,12 +65,13 @@ let attributes =
 // Targets
 Target "Clean" (fun _ -> CleanDir buildDir)
 
-let DoBuild f = 
+let DoBuild isDebug = 
     CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" attributes
-    f buildDir "Build" appReferences |> Log "AppBuild-Output: "
+    Restore id
+    DotNetCli.Build (fun p -> {p with Configuration = if isDebug then "Debug" else "Release"})
 
-Target "Debug" (fun _ -> DoBuild MSBuildDebug)
-Target "Release" (fun _ -> DoBuild MSBuildRelease)
+Target "Debug" (fun _ -> DoBuild true)
+Target "Release" (fun _ -> DoBuild false)
 Target "FormatCode" (fun _ -> 
     sourceFiles
     |> formatCode fantomasConfig
