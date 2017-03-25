@@ -1,4 +1,7 @@
 source https://api.nuget.org/v3/index.json
+
+framework: auto-detect
+
 nuget Argu
 nuget FAKE
 nuget Fantomas
