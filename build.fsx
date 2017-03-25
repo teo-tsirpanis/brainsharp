@@ -45,13 +45,6 @@ let fantomasConfig =
 let appReferences = !!"/**/*.csproj" ++ "/**/*.fsproj"
 let sourceFiles = !!"src/**/*.fs" ++ "src/**/*.fsx" ++ "build.fsx"
 
-let resources = 
-    !!"src/bsc/resources/*.cs"
-    |> List.ofSeq
-    |> List.map 
-           ((fun s -> Path.GetFileNameWithoutExtension(s), File.ReadAllText s) 
-            >> Attribute.Metadata)
-
 let attributes = 
     let gitHash = Information.getCurrentHash()
     let buildDate = DateTime.UtcNow.ToString()
