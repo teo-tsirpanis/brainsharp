@@ -36,7 +36,8 @@ let version =
     | AppVeyor -> AppVeyorEnvironment.BuildVersion
     | _ -> BuildVersion // or retrieve from CI server
 
-let buildDir = "./build/"
+[<Literal>]
+let BuildDir = "./build/"
 
 let fantomasConfig = 
     { FormatConfig.Default with PageWidth = 80
@@ -63,21 +64,22 @@ let attributes =
       Attribute.Version version ]
 
 // Targets
-Target "Clean" (fun _ -> CleanDir buildDir)
+Target "Clean" (fun _ -> DotNetCli.RunCommand id "clean")
 
-let DoBuild isDebug = 
-    CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" attributes
-    Restore id
-    DotNetCli.Build (fun p -> {p with Configuration = if isDebug then "Debug" else "Release"})
+Target "AssemblyInfo" (fun _ -> CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" attributes)
 
-Target "Debug" (fun _ -> DoBuild true)
-Target "Release" (fun _ -> DoBuild false)
+Target "Build" (fun _ -> 
+    Paket.Restore id
+    Build (fun p -> {p with Output = BuildDir}))
+
 Target "FormatCode" (fun _ -> 
     sourceFiles
     |> formatCode fantomasConfig
     |> Log "Formatted Files: ")
+
 // Build order
-"Clean" ?=> "Debug"
-"Clean" ?=> "Release"
+"Clean" 
+    ?=> "AssemblyInfo"
+    ==> "Build"
 // start build
-RunTargetOrDefault "Release"
+RunTargetOrDefault "Build"
