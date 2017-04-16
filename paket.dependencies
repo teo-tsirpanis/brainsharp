@@ -1,7 +1,10 @@
+framework: net462
+
 source https://api.nuget.org/v3/index.json
+
 nuget Argu
+nuget Chessie
 nuget FAKE
 nuget Fantomas
 nuget FParsec
 nuget Microsoft.CodeAnalysis.CSharp
-github fsprojects/Chessie src/Chessie/ErrorHandling.fs

@@ -256,3 +256,5 @@ deploy/
 /.project
 
 *.out
+
+src/bsc/any/

@@ -1,14 +1,16 @@
 <Project Sdk="FSharp.NET.Sdk;Microsoft.NET.Sdk">
   <PropertyGroup>
     <OutputType>Exe</OutputType>
-    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <TargetFramework>net462</TargetFramework>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="..\..\paket-files\fsprojects\Chessie\src\Chessie\ErrorHandling.fs">
+    <Content Include="any\netstandard1.6\FSharp.Core.optdata">
       <Paket>True</Paket>
-      <Link>ErrorHandling.fs</Link>
-    </Compile>
+    </Content>
+    <Content Include="any\netstandard1.6\FSharp.Core.sigdata">
+      <Paket>True</Paket>
+    </Content>
     <None Include="App.config" />
     <None Include="paket.references" />
     <Compile Include="AssemblyInfo.fs" />
