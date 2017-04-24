@@ -16,8 +16,16 @@ module Resources =
     
     let methodTemplate = rm.GetString "MethodTemplate"
 
+type CompilationError =
+    | RoslynError of string
+    | UnmatchedBracket
+    override x.ToString() =
+        match x with
+        | RoslynError x -> sprintf "Error while compiling the C# code: %s\nThis is a bug. Please report it." x
+        | UnmatchedBracket -> "Unmatched loop"
+
 type BFError = 
-    | CompilationError of string
+    | CompilationError of CompilationError
     | CompilationMessage of string
     | ProfilingResults of TimeSpan * uint64
     | FileExist of string
@@ -27,7 +35,7 @@ type BFError =
     | TestFailure of excpected : string * found : string
     override x.ToString() = 
         match x with
-        | CompilationError x -> sprintf "Compilation Error: %s" x
+        | CompilationError x -> sprintf "Compilation Error: %A" x
         | CompilationMessage x -> sprintf "Compilation Warning: %s" x
         | ProfilingResults(time, instructionsRun) -> 
             sprintf 

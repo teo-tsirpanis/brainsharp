@@ -46,6 +46,7 @@ module Compiler =
                        match d.Severity with
                        | DiagnosticSeverity.Error ->
                            message
+                           |> RoslynError
                            |> CompilationError
                            |> fail
                        | _ ->
