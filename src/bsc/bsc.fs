@@ -6,7 +6,6 @@ namespace Brainsharp
 
 open Argu
 open BFCode
-open BFParser
 open Chessie.ErrorHandling
 open CodeEmitter
 open Interpreter
@@ -21,9 +20,7 @@ module Bsc =
     
     let doBuild (source, outputFile, assemblyName, memSize, doOptimize, doProfile) = 
         trial { 
-            let! theCode = parseFile source |> lift (makeCodeTree >> (if doOptimize then 
-                                                                          optimize
-                                                                      else id))
+            let! theCode = parseFile source |> lift (if doOptimize then optimize else id)
             do! Compiler.compileToFile assemblyName outputFile memSize doProfile theCode
         }
     
@@ -33,7 +30,6 @@ module Bsc =
             use input = input
             use output = output
             let! theCode = parseFile source
-                           |> lift makeCodeTree
                            |> lift (if doOptimize then optimize
                                     else id)
             let sw = Stopwatch()

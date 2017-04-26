@@ -16,7 +16,6 @@
     <Compile Include="AssemblyInfo.fs" />
     <Compile Include="Common.fs" />
     <Compile Include="RLE.fs" />
-    <Compile Include="BFParser.fs" />
     <Compile Include="BFCode.fs" />
     <Compile Include="Optimizer.fs" />
     <Compile Include="Interpreter.fs" />

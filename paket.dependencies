@@ -6,5 +6,4 @@ nuget Argu
 nuget Chessie
 nuget FAKE
 nuget Fantomas
-nuget FParsec
 nuget Microsoft.CodeAnalysis.CSharp
