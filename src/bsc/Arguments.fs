@@ -115,8 +115,7 @@ module Arguments =
             let! input = a.TryPostProcessResult(<@ InputFile @>, 
                                                 fun s -> 
                                                     if File.Exists(s) then 
-                                                        new StreamReader(s, 
-                                                                         Encoding.ASCII) :> TextReader 
+                                                        new StreamReader(new FileStream(s, FileMode.Open), Encoding.ASCII) :> TextReader
                                                         |> ok
                                                     else fail (FileNotExist s))
                          |> someOr (Console.In |> ok)
@@ -124,7 +123,7 @@ module Arguments =
                               (<@ OutputFile @>, 
                                fun s -> 
                                    let sw = 
-                                       new StreamWriter(s, false, Encoding.ASCII) :> TextWriter
+                                       new StreamWriter(new FileStream(s, FileMode.Open), Encoding.ASCII) :> TextWriter
                                    if File.Exists(s) |> not then sw |> ok
                                    else sw |> warn (FileExist s))
                           |> someOr (Console.Out |> ok)

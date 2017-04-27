@@ -1,4 +1,4 @@
-framework: net462
+framework: netcoreapp1.1
 
 source https://api.nuget.org/v3/index.json
 

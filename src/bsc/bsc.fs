@@ -35,7 +35,7 @@ module Bsc =
             let sw = Stopwatch()
             sw.Start()
             let stringOut, instructionsRun = 
-                interpretExTee memSize input output theCode
+                interpretEx memSize input output theCode
             sw.Stop()
             do! (match doProfile with
                  | true -> 

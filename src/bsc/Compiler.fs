@@ -9,6 +9,7 @@ open Microsoft.CodeAnalysis
 open Microsoft.CodeAnalysis.CSharp
 open System
 open System.Diagnostics
+open System.Reflection
 
 module Compiler =
     let compileToFile name (destination : string) memSize doProfile program =
@@ -32,7 +33,7 @@ module Compiler =
                   typeof<Stopwatch>]
                 |> Seq.map
                        (fun t ->
-                       t.Assembly.Location |> MetadataReference.CreateFromFile :> MetadataReference)
+                       t.GetTypeInfo().Assembly.Location |> MetadataReference.CreateFromFile :> MetadataReference)
                 |> Seq.distinct
             let compilation =
                 CSharpCompilation.Create(name, trees, references, options)

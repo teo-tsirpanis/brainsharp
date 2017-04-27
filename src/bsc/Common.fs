@@ -4,13 +4,14 @@
 // http://opensource.org/licenses/mit-license.php
 namespace Brainsharp
 
-open FParsec
 open System
 open System.Reflection
 open System.Resources
 
+type private Yoshi = Yoshi of unit
+
 module Resources =
-    let private rm = ResourceManager("bsc", Assembly.GetExecutingAssembly())
+    let private rm = ResourceManager("bsc", typeof<Yoshi>.GetTypeInfo().Assembly)
 
     let compiledProgram = rm.GetString "CompiledProgram"
     
@@ -30,7 +31,6 @@ type BFError =
     | ProfilingResults of TimeSpan * uint64
     | FileExist of string
     | FileNotExist of string
-    | ParseError of string * ParserError
     | ShowVersion
     | TestFailure of excpected : string * found : string
     override x.ToString() = 
@@ -45,7 +45,6 @@ type BFError =
         | FileExist x -> 
             sprintf "File %s already exists. It will be overwritten." x
         | FileNotExist x -> sprintf "File %s does not exist." x
-        | ParseError(x, _) -> x
         | ShowVersion -> 
             AssemblyVersionInformation.AssemblyMetadata_Version_Message
         | TestFailure(expected, found) -> 

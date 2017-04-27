@@ -47,6 +47,7 @@ module Interpreter =
     exception private EofException of unit
     
     let interpretEx memSize (reader : TextReader) (writer : TextWriter) program = 
+        let strOut = StringBuilder()
         let readProc() = 
             match reader.Read() with
             | -1 -> None
@@ -55,8 +56,11 @@ module Interpreter =
                 |> char
                 |> Some
         
-        let writeProc (c : char) = writer.Write c
-        interpret memSize readProc writeProc program
+        let writeProc (c: char) =
+            writer.Write c
+            strOut.Append c |> ignore
+        
+        strOut.ToString(), interpret memSize readProc writeProc program
     
     let interpretString memSize input program = 
         let reader = new StringReader(input)
@@ -64,16 +68,3 @@ module Interpreter =
         let ic = interpretEx memSize reader writer program
         writer.ToString(), ic
     
-    let interpretExTee memSize reader (writer : TextWriter) program = 
-        let mutable strOut = ""
-        
-        let newWriter = 
-            { new TextWriter() with
-                  member x.Close() = writer.Close()
-                  member x.Encoding = Encoding.ASCII
-                  member x.Write(y : char) = 
-                      strOut <- strOut + string y
-                      writer.Write(y) }
-        
-        let ic = interpretEx memSize reader newWriter program
-        strOut, ic
