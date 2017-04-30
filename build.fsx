@@ -37,7 +37,7 @@ let version =
     | _ -> BuildVersion // or retrieve from CI server
 
 [<Literal>]
-let BuildDir = "./../../build/"
+let BuildDir = "./build/"
 
 let fantomasConfig = 
     { FormatConfig.Default with PageWidth = 80
@@ -64,13 +64,14 @@ let attributes =
       Attribute.Version version ]
 
 // Targets
-Target "Clean" (fun _ -> DotNetCli.RunCommand id "clean")
+Target "Clean" (fun _ -> DotNetCli.RunCommand id "clean"
+                         DeleteDir BuildDir)
 
 Target "AssemblyInfo" (fun _ -> CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" attributes)
 
 Target "Build" (fun _ -> 
     DotNetCli.Restore id
-    Build (fun p -> {p with Output = BuildDir}))
+    Build (fun p -> {p with Output = sprintf "./../../%s" BuildDir}))
 
 Target "FormatCode" (fun _ -> 
     sourceFiles
