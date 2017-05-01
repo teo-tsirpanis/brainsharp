@@ -14,32 +14,37 @@ type BFToken =
 
 module BFCode =
     open Chessie.ErrorHandling
+    open FParsec
     open System
     open System.IO
 
-    let parse (code: string) =
-        let code = code.ToCharArray() |> List.ofArray
-        let tokenIndex =      ['+', MemoryControl 1uy
-                               '-', MemoryControl 255uy
-                               '<', PointerControl -1
-                               '>', PointerControl 1
-                               '.', IOWrite
-                               ',', IORead] |> Map.ofList
-        let rec parseImpl body depth = ok >> bind (function
-            | x :: xs ->
-                match x with
-                    | x when tokenIndex.ContainsKey x -> parseImpl (tokenIndex.[x] :: body) depth xs
-                    | '[' -> let loopBody = parseImpl [] (depth + 1u) xs |> lift Loop
-                             let xs = xs |> List.skipWhile ((<>) ']') |> (function | [] -> [] | x -> x |> List.skip 1)
-                             loopBody >>= (fun loopBody -> parseImpl [] depth xs >>= (fun rest -> loopBody :: rest |> ok))
-                    | ']' -> match depth with
-                                | 0u -> UnmatchedBracket |> CompilationError |> fail
-                                | _ -> body |> List.rev |> ok
-                    | _ -> parseImpl body depth xs
-            | [] ->
-                match depth with
-                        | 0u -> body |> List.rev |> ok
-                        | _ -> UnmatchedBracket |> CompilationError |> fail)
-        parseImpl [] 0u code
+    let brainfuckParser =
+        let whiteSpace = "+-<>[].," |> skipNoneOf |> many
+        let stringReturn v c = whiteSpace >>. stringReturn v c
+        let pstring v = whiteSpace >>. pstring v        
+        let p, pref = createParserForwardedToRef<BFToken list, unit>()
+        let symbols =     [ "+", MemoryControl 1uy
+                            "-", MemoryControl 255uy
+                            "<", PointerControl -1
+                            ">", PointerControl 1
+                            ".", IOWrite
+                            ",", IORead ] 
+                            |> List.map ((<||) stringReturn)
+                            |> choice
+                            <|> (between (pstring "[") (pstring "]") p |>> Loop)
+        pref := whiteSpace >>. symbols .>> whiteSpace |> many
+        p .>> eof
 
-    let parseFile source = source |> File.ReadAllText |> parse
+    let private makeParseResult = 
+        function 
+        | Success(x, _, _) -> ok x
+        | Failure(x, _, _) -> x |> ParseError |> Trial.fail
+    
+    let parseFile path = 
+        runParserOnFile brainfuckParser () path System.Text.Encoding.ASCII 
+        |> makeParseResult
+    
+    let parseString s streamName = 
+        runParserOnString brainfuckParser () (match streamName with
+                                              | Some s -> s
+                                              | None -> "") s

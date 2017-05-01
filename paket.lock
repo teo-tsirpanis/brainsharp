@@ -6,6 +6,7 @@ NUGET
     FAKE (4.58.6)
     Fantomas (2.6.1)
       FSharp.Compiler.Service (>= 11.0.4)
+    FParsec (1.0.3-alpha-170404)
     FSharp.Compiler.Service (12.0.5)
     Microsoft.CodeAnalysis.Common (2.1)
     Microsoft.CodeAnalysis.CSharp (2.1)

@@ -19,11 +19,9 @@ module Resources =
 
 type CompilationError =
     | RoslynError of string
-    | UnmatchedBracket
     override x.ToString() =
         match x with
         | RoslynError x -> sprintf "Error while compiling the C# code: %s\nThis is a bug. Please report it." x
-        | UnmatchedBracket -> "Unmatched loop"
 
 type BFError = 
     | CompilationError of CompilationError
@@ -31,11 +29,12 @@ type BFError =
     | ProfilingResults of TimeSpan * uint64
     | FileExist of string
     | FileNotExist of string
+    | ParseError of string
     | ShowVersion
     | TestFailure of excpected : string * found : string
     override x.ToString() = 
         match x with
-        | CompilationError x -> sprintf "Compilation Error: %A" x
+        | CompilationError x -> sprintf "%O" x
         | CompilationMessage x -> sprintf "Compilation Warning: %s" x
         | ProfilingResults(time, instructionsRun) -> 
             sprintf 
@@ -45,6 +44,7 @@ type BFError =
         | FileExist x -> 
             sprintf "File %s already exists. It will be overwritten." x
         | FileNotExist x -> sprintf "File %s does not exist." x
+        | ParseError x -> x
         | ShowVersion -> 
             AssemblyVersionInformation.AssemblyMetadata_Version_Message
         | TestFailure(expected, found) -> 
