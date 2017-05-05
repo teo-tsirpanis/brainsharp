@@ -11,6 +11,7 @@ type BuildArguments =
     | [<MainCommand; ExactlyOnce>] SourceFile of path : string
     | [<ExactlyOnce; AltCommandLine("-o")>] OutputFile of path : string
     | [<Unique; AltCommandLine("-n")>] AssemblyName of string
+    | [<Unique; AltCommandLine("-source")>] ExportSource
     | [<Unique>] MemorySize of bytes : int
     | [<Unique>] Optimize of bool
     | Profile
@@ -27,6 +28,7 @@ type BuildArguments =
             | Optimize _ -> 
                 "Controls optimization of the program. Defaults to true."
             | Profile -> "The generated program will display execution time in stderr."
+            | ExportSource -> "Exports the C# source code of the program; not the actual one."
 
 type RunArguments = 
     | [<MainCommand; ExactlyOnce>] SourceFile of path : string
@@ -65,7 +67,7 @@ type CliArguments =
             | Run _ -> "Runs a brainfuck program."
 
 type ResultArgs = 
-    | BuildArgs of sourceFile : string * outputFile : string * assemblyName : string * memorySize : int * doOptimize : bool * doProfile: bool
+    | BuildArgs of sourceFile : string * outputFile : string * assemblyName : string * memorySize : int * doOptimize : bool * doProfile: bool * doExportSource: bool
     | RunArgs of sourceFile : string * input : TextReader * output : TextWriter * expectedOutput : string option * memorySize : int * doProfile : bool * doOptimize : bool
     | NoArgs
 
@@ -102,7 +104,8 @@ module Arguments =
             
             let doOptimize = a.GetResult(<@ BuildArguments.Optimize @>, true)
             let doProfile = a.Contains (<@ BuildArguments.Profile @>)
-            return (source, outputFile, assemblyName, memSize, doOptimize, doProfile) 
+            let doExportSource = a.Contains <@ ExportSource @>
+            return (source, outputFile, assemblyName, memSize, doOptimize, doProfile, doExportSource) 
                    |> BuildArgs
         }
     
