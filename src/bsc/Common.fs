@@ -6,16 +6,6 @@ namespace Brainsharp
 
 open System
 open System.Reflection
-open System.Resources
-
-type private Yoshi = Yoshi of unit
-
-module Resources =
-    let private rm = ResourceManager("bsc", typeof<Yoshi>.GetTypeInfo().Assembly)
-
-    let compiledProgram = rm.GetString "CompiledProgram"
-    
-    let methodTemplate = rm.GetString "MethodTemplate"
 
 type CompilationError =
     | RoslynError of string

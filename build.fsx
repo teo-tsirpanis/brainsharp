@@ -46,6 +46,12 @@ let fantomasConfig =
 // Filesets
 let appReferences = !!"/**/*.csproj" ++ "/**/*.fsproj"
 let sourceFiles = !!"src/**/*.fs" ++ "src/**/*.fsx" ++ "build.fsx"
+let resourceFiles = !!"src/**/resources/**.*"
+
+let makeResource file =
+    let content = File.ReadAllText file
+    let file = file |> Path.GetFileNameWithoutExtension
+    sprintf "let %s = \"\"\"\n%s\n\"\"\"" file content
 
 let attributes = 
     let gitHash = Information.getCurrentHash()
@@ -67,6 +73,10 @@ let attributes =
 Target "Clean" (fun _ -> DotNetCli.RunCommand id "clean"
                          DeleteDir BuildDir)
 
+Target "MakeResources" (fun _ -> 
+                            let content = resourceFiles |> Seq.map makeResource |> String.concat "\n" |> sprintf "module Brainsharp.Resources\n%s"
+                            File.WriteAllText("./src/bsc/Resources.fs", content))
+
 Target "AssemblyInfo" (fun _ -> CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" attributes)
 
 Target "Build" (fun _ -> 
@@ -82,5 +92,6 @@ Target "FormatCode" (fun _ ->
 "Clean" 
     ?=> "AssemblyInfo"
     ==> "Build"
+"MakeResources" ==> "Build"
 // start build
 RunTargetOrDefault "Build"

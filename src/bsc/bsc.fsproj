@@ -8,6 +8,7 @@
     <None Include="App.config" />
     <None Include="paket.references" />
     <Compile Include="AssemblyInfo.fs" />
+    <Compile Include="Resources.fs" />
     <Compile Include="Common.fs" />
     <Compile Include="RLE.fs" />
     <Compile Include="BFCode.fs" />

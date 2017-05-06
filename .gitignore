@@ -249,6 +249,7 @@ paket-files/
 build/
 deploy/
 **/AssemblyInfo.fs
+**/Resources.fs
 
 # JetBrains Rider
 .idea/
