@@ -1,10 +1,17 @@
-framework: netcoreapp1.1
+framework: netcoreapp2.0
+
+storage: none
 
 source https://api.nuget.org/v3/index.json
 
 nuget Argu
 nuget Chessie
-nuget FAKE
 nuget FParsec ~> 1.0.3-alpha-170404
-nuget Fantomas
 nuget Microsoft.CodeAnalysis.CSharp
+
+group build
+
+source https://api.nuget.org/v3/index.json
+
+nuget FAKE
+nuget Fantomas

@@ -3,9 +3,9 @@
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // include Fake libs
-#r "./packages/FAKE/tools/FakeLib.dll"
-#r "./packages/Fantomas/lib/FantomasLib.dll"
-#r "./packages/FSharp.Compiler.Service/lib/net45/FSharp.Compiler.Service.dll"
+#r "./packages/build/FAKE/tools/FakeLib.dll"
+#r "./packages/build/Fantomas/lib/FantomasLib.dll"
+#r "./packages/build/FSharp.Compiler.Service/lib/net45/FSharp.Compiler.Service.dll"
 
 open Fake
 open Fake.AppVeyor
