@@ -21,6 +21,19 @@ open System.IO
 [<Literal>]
 let AppName = "Brainsharp"
 
+type Framework =
+    | Net
+    | NetCore
+    with
+    override x.ToString() = match x with | Net -> "net47" | NetCore -> "netcoreapp2.0"
+
+let runtimes = [
+    "win-x64", Net
+    "linux-x64", NetCore
+    "osx-x64", NetCore
+    "", NetCore // .NET Core Framework-dependent deployment
+    ]
+
 [<Literal>]
 let AppVersionMessage = 
     "Brainsharp Version {0}. \nGit commit hash: {1}. \nBuilt on {2} (UTC)." 
@@ -36,8 +49,7 @@ let version =
     | AppVeyor -> AppVeyorEnvironment.BuildVersion
     | _ -> BuildVersion // or retrieve from CI server
 
-[<Literal>]
-let BuildDir = "./build/"
+let buildDir = currentDirectory @@ "build"
 
 let fantomasConfig = 
     { FormatConfig.Default with PageWidth = 80
@@ -70,8 +82,8 @@ let attributes =
       Attribute.Version version ]
 
 // Targets
-Target "Clean" (fun _ -> DotNetCli.RunCommand id "clean"
-                         DeleteDir BuildDir)
+Target "Clean" (fun _ -> //DotNetCli.RunCommand id "clean"
+                         DeleteDir buildDir)
 
 Target "MakeResources" (fun _ -> 
                             let content = resourceFiles |> Seq.map makeResource |> String.concat "\n" |> sprintf "module Brainsharp.Resources\n%s"
@@ -81,7 +93,22 @@ Target "AssemblyInfo" (fun _ -> CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo
 
 Target "Build" (fun _ -> 
     DotNetCli.Restore id
-    Build (fun p -> {p with Output = sprintf "./../../%s" BuildDir}))
+    Build (fun p -> {p with Configuration = "Release"}))
+
+Target "Publish" (fun _ -> 
+    runtimes
+    |> Seq.map (fun (x, y) -> x, string y)
+    |> Seq.iter (fun (rt, fx) ->
+        let outFileName = sprintf "%s-%s-%s" AppName version (if rt <> "" then rt else "netcore")
+        let output = buildDir @@ outFileName
+        Publish (fun p ->
+            {p with 
+                Runtime = rt
+                Output = output
+                Framework = fx
+                AdditionalArgs = ["--no-restore"]})
+        Zip output (sprintf "%s.zip" output) (!! output)
+        DeleteDir output))
 
 Target "FormatCode" (fun _ -> 
     sourceFiles
@@ -90,8 +117,9 @@ Target "FormatCode" (fun _ ->
 
 // Build order
 "Clean" 
-    ?=> "AssemblyInfo"
+    ==> "AssemblyInfo"
     ==> "Build"
+    ==> "Publish"
 "MakeResources" ==> "Build"
 // start build
 RunTargetOrDefault "Build"
