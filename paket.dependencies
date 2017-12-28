@@ -6,10 +6,12 @@ source https://api.nuget.org/v3/index.json
 
 nuget Argu
 nuget Chessie
-nuget FParsec ~> 1.0.3-alpha-170404
+nuget FParsec
 nuget Microsoft.CodeAnalysis.CSharp
 
 group build
+
+framework: net47
 
 source https://api.nuget.org/v3/index.json
 
