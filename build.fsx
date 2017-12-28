@@ -29,8 +29,8 @@ type Framework =
 
 let runtimes = [
     "win-x64", Net
-    "linux-x64", NetCore
-    "osx-x64", NetCore
+    "ubuntu-x64", NetCore
+    "osx.10.10-x64", NetCore
     "", NetCore // .NET Core Framework-dependent deployment
     ]
 
@@ -99,7 +99,8 @@ Target "Build" (fun _ ->
 Target "Publish" (fun _ ->
     runtimes
     |> Seq.map (fun (x, y) -> x, string y)
-    |> Seq.iter (fun (rt, fx) ->
+    |> Array.ofSeq
+    |> Array.Parallel.iter (fun (rt, fx) ->
         let outFileName = sprintf "%s-%s-%s" AppName version (if rt <> "" then rt else "netcore")
         let output = buildDir @@ outFileName
         Publish (fun p ->
