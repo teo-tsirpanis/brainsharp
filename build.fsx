@@ -1,5 +1,5 @@
 // Copyright (c) 2016 Theodore Tsirpanis
-// 
+//
 // This software is released under the MIT License.
 // http://opensource.org/licenses/mit-license.php
 // include Fake libs
@@ -35,23 +35,23 @@ let runtimes = [
     ]
 
 [<Literal>]
-let AppVersionMessage = 
-    "Brainsharp Version {0}. \nGit commit hash: {1}. \nBuilt on {2} (UTC)." 
-    + "\nCreated by Theodore Tsirpanis and licensed under the MIT License." 
+let AppVersionMessage =
+    "Brainsharp Version {0}. \nGit commit hash: {1}. \nBuilt on {2} (UTC)."
+    + "\nCreated by Theodore Tsirpanis and licensed under the MIT License."
     + "\nCheck out new releases on https://github.com/teo-tsirpanis/brainsharp/releases"
 
 // version info
 [<Literal>]
 let BuildVersion = "1.3"
 
-let version = 
+let version =
     match buildServer with
     | AppVeyor -> AppVeyorEnvironment.BuildVersion
     | _ -> BuildVersion // or retrieve from CI server
 
 let buildDir = currentDirectory @@ "build"
 
-let fantomasConfig = 
+let fantomasConfig =
     { FormatConfig.Default with PageWidth = 80
                                 ReorderOpenDeclaration = true }
 
@@ -65,19 +65,19 @@ let makeResource file =
     let file = file |> Path.GetFileNameWithoutExtension
     sprintf "let %s = \"\"\"\n%s\n\"\"\"" file content
 
-let attributes = 
+let attributes =
     let gitHash = Information.getCurrentHash()
     let buildDate = DateTime.UtcNow.ToString()
     [ Attribute.Title "Brainsharp"
       Attribute.Description "A Brainfuck toolchain written in F#."
-      
-      Attribute.Copyright 
+
+      Attribute.Copyright
           "Licensed under the MIT License. Created by Theodore Tsirpanis."
       Attribute.Metadata("Git Hash", gitHash)
       Attribute.Metadata("Build Date", buildDate)
-      
+
       Attribute.Metadata
-          ("Version Message", 
+          ("Version Message",
            String.Format(AppVersionMessage, version, gitHash, buildDate))
       Attribute.Version version ]
 
@@ -85,24 +85,25 @@ let attributes =
 Target "Clean" (fun _ -> //DotNetCli.RunCommand id "clean"
                          DeleteDir buildDir)
 
-Target "MakeResources" (fun _ -> 
+Target "MakeResources" (fun _ ->
                             let content = resourceFiles |> Seq.map makeResource |> String.concat "\n" |> sprintf "module Brainsharp.Resources\n%s"
                             File.WriteAllText("./src/bsc/Resources.fs", content))
 
 Target "AssemblyInfo" (fun _ -> CreateFSharpAssemblyInfo "./src/bsc/AssemblyInfo.fs" attributes)
 
-Target "Build" (fun _ -> 
-    DotNetCli.Restore id
-    Build (fun p -> {p with Configuration = "Release"}))
+Target "Restore" (fun _ -> DotNetCli.Restore id)
 
-Target "Publish" (fun _ -> 
+Target "Build" (fun _ ->
+    Build (fun p -> {p with Configuration = "Release"; AdditionalArgs = ["--no-restore"]}))
+
+Target "Publish" (fun _ ->
     runtimes
     |> Seq.map (fun (x, y) -> x, string y)
     |> Seq.iter (fun (rt, fx) ->
         let outFileName = sprintf "%s-%s-%s" AppName version (if rt <> "" then rt else "netcore")
         let output = buildDir @@ outFileName
         Publish (fun p ->
-            {p with 
+            {p with
                 Runtime = rt
                 Output = output
                 Framework = fx
@@ -110,14 +111,15 @@ Target "Publish" (fun _ ->
         Zip output (sprintf "%s.zip" output) (!! output)
         DeleteDir output))
 
-Target "FormatCode" (fun _ -> 
+Target "FormatCode" (fun _ ->
     sourceFiles
     |> formatCode fantomasConfig
     |> Log "Formatted Files: ")
 
 // Build order
-"Clean" 
+"Clean"
     ==> "AssemblyInfo"
+    ==> "Restore"
     ==> "Build"
     ==> "Publish"
 "MakeResources" ==> "Build"
