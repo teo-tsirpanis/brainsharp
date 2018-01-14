@@ -28,9 +28,6 @@ type Framework =
     override x.ToString() = match x with | Net -> "net47" | NetCore -> "netcoreapp2.0"
 
 let runtimes = [
-    "win-x64", Net
-    "ubuntu-x64", NetCore
-    "osx.10.10-x64", NetCore
     "", NetCore // .NET Core Framework-dependent deployment
     ]
 
